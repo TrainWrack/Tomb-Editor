@@ -99,8 +99,8 @@ LevelFuncs.Engine.UpdateCustomBars = function()
 				
 				--- Debugging code
 				local barValue = math.floor(CustomBar.OldValue)
-				myTextString = "Bar Value: " .. barValue
-				myText = DisplayString(myTextString, CustomBar.PosX, CustomBar.PosY-10, CustomBar.ColorBar)
+				local myTextString = "Bar Value: " .. barValue
+				local myText = DisplayString(myTextString, CustomBar.PosX, CustomBar.PosY-10, CustomBar.ColorBar)
 				ShowString(myText,1/30)
 			end
 		end
