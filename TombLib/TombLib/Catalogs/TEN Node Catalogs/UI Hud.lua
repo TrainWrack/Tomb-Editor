@@ -1,4 +1,4 @@
---Custom Bar Nodes by TrainWreck and DaviDMRR and Adngel; Code references by Lwmte and TEN Nodes.
+--UI Hud Nodes by Adngel, DaviDMRR and TrainWreck; Code references by Lwmte and TEN Nodes.
 
 LevelVars.CustomBars = {}
 -- Construct custom bar
