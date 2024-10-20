@@ -232,7 +232,7 @@
     <None Update="Catalogs\TEN Node Catalogs\Dynamic Lights.lua">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Catalogs\TEN Node Catalogs\CustomBars.lua">
+    <None Update="Catalogs\TEN Node Catalogs\UI Hud.lua">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Catalogs\TEN Node Catalogs\Lara.lua">
