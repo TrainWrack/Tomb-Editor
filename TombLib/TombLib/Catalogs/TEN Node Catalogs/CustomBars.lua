@@ -362,11 +362,73 @@ LevelFuncs.Engine.UpdateEnemyBars = function()
 
 				-- Draw text (enemy name and health)
 				local enemyText = CustomBar.Text --debug text  .. " (" .. currentHP .. " / " .. totalHP .. ")"
-				myText = LevelFuncs.Engine.Node.GenerateString(enemyText, CustomBar.TextX, CustomBar.TextY, CustomBar.TextScale, CustomBar.TextAlignment, CustomBar.TextEffects, CustomBar.TextColor)
+				local myText = LevelFuncs.Engine.Node.GenerateString(enemyText, CustomBar.TextX, CustomBar.TextY, CustomBar.TextScale, CustomBar.TextAlignment, CustomBar.TextEffects, CustomBar.TextColor)
 				ShowString(myText, 1/30)
 			end
 		end
 	end
+end
+
+LevelVars.AC = {}
+LevelVars.AC.AmmoName = {
+    'pistol_ammo', 'revolver_ammo', 'uzi_ammo', 'shotgun_normal_ammo', 'shotgun_wideshot_ammo', 'hk_ammo',
+    'crossbow_normal_ammo', 'crossbow_poison_ammo', 'crossbow_explosive_ammo', 'grenade_launcher_normal_ammo', 
+    'grenade_launcher_super_ammo', 'grenade_launcher_flash_ammo', 'harpoon_gun_ammo', 'rocket_launcher_ammo'
+}
+
+-- !Name "Show ammo counter"
+-- !Conditional "False"
+-- !Description "Displays the number of available ammo of the weapon in hand"
+-- !Section "UI/Hud"
+-- !Arguments "NewLine, Enumeration , 65,[ Counter + ammo name | Use only counter], Display type"
+-- !Arguments "Color, 17, Counter text color"
+-- !Arguments "Enumeration , 19,[ Left  | Center | Right ], Text alignment"
+-- !Arguments "NewLine, Numerical, 17, [ 0 | 100 | 1 | 0.1 ], Counter position x"
+-- !Arguments "Numerical, 17, [ 0 | 100 | 1 | 0.1 ], Counter position y"
+-- !Arguments "Numerical, 17, {1}, [ 0 | 9 | 2 | 0.1 ], Scale"
+-- !Arguments "Enumeration, 49, [ Flat | Shadow | Blinking | Shadow + Blinking ], Effects"
+-- !Arguments "NewLine, Boolean , 33, Show unlimited ammo"
+-- !Arguments "Boolean , 33, Swap ammo name & counter position"
+-- !Arguments "Boolean , 33, Show sprite"
+
+LevelFuncs.Engine.Node.ShowAmmoCounter = function(displayType, color, alignment, posX, posY, scale, effect, unlimited, swap, sprite)
+    LevelVars.AC.DisplayType = displayType
+    LevelVars.AC.Color = color
+    LevelVars.AC.Alignment = alignment
+    LevelVars.AC.PosX = posX
+    LevelVars.AC.PosY = posY
+    LevelVars.AC.Scale = scale
+    LevelVars.AC.Effect = effect
+    LevelVars.AC.Unlimited = unlimited
+    LevelVars.AC.Swap = swap
+	LevelVars.AC.sprite = sprite
+    AddCallback(TEN.Logic.CallbackPoint.POSTCONTROLPHASE, LevelFuncs.__ShowAmmoCounter)
+    PrintLog('Ammo counter initialized correctly', LogLevel.INFO)
+end
+
+-- !Name "Remove ammo counter"
+-- !Conditional "False"
+-- !Description "Remove the number of available ammo"
+-- !Section "UI/Hud"
+LevelFuncs.Engine.Node.RemoveAmmoCounter = function()
+    RemoveCallback(TEN.Logic.CallbackPoint.POSTCONTROLPHASE, LevelFuncs.__ShowAmmoCounter)
+end
+
+LevelFuncs.__ShowAmmoCounter = function()
+    if ((Lara:GetHandStatus() == 2 or Lara:GetHandStatus() == 4) and (Lara:GetWeaponType() ~= 7 and Lara:GetWeaponType() ~= 8)) then
+        local number = (Lara:GetAmmoCount() >= 0) and Lara:GetAmmoCount() or (LevelVars.AC.Unlimited and (GetString("unlimited"):gsub(" ", "")):gsub("%%s", "") or "")
+        local ammoName = (LevelVars.AC.DisplayType == 0) and ((not LevelVars.AC.Unlimited and Lara:GetAmmoCount() < 0) and "" or GetString(LevelVars.AC.AmmoName[Lara:GetAmmoType()])) or ""
+        local ammoText = (ammoName == "") and tostring(number) or ((LevelVars.AC.Swap) and ammoName .. " " .. number or number .. " " .. ammoName)
+        if Lara:GetHP() > 0 and ammoText ~= "" then
+			local myText = LevelFuncs.Engine.Node.GenerateString(ammoText, LevelVars.AC.PosX, LevelVars.AC.PosY, LevelVars.AC.Scale, LevelVars.AC.Alignment, LevelVars.AC.Effect, LevelVars.AC.Color)
+			ShowString(myText, 1/30)
+            
+			if LevelVars.AC.sprite then
+				local ammoSprite = DisplaySprite(TEN.Objects.ObjID.MOTORBOAT_FOAM_SPRITES, Lara:GetAmmoType(), Vec2(LevelVars.AC.PosX,LevelVars.AC.PosY+1),0, Vec2(LevelVars.AC.Scale*4,LevelVars.AC.Scale*4))
+				ammoSprite:Draw(0,View.AlignMode.TOP_RIGHT,View.ScaleMode.FIT,Effects.BlendID.ALPHABLEND)
+			end
+        end
+    end
 end
 
 TEN.Logic.AddCallback(TEN.Logic.CallbackPoint.PRELOOP, LevelFuncs.Engine.UpdateEnemyBars)
