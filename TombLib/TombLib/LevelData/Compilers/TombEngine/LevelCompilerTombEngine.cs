@@ -204,13 +204,13 @@ namespace TombLib.LevelData.Compilers.TombEngine
                 int sinkID = 0;
                 int camID = 0;
                 int flybyID = 0;
+                int volumeID = 0;
 
                 _cameraTable = new Dictionary<CameraInstance, int>(new ReferenceEqualityComparer<CameraInstance>());
                 _sinkTable = new Dictionary<SinkInstance, int>(new ReferenceEqualityComparer<SinkInstance>());
                 _flybyTable = new Dictionary<FlybyCameraInstance, int>(new ReferenceEqualityComparer<FlybyCameraInstance>());
                 _volumeTable = new Dictionary<VolumeInstance, int>(new ReferenceEqualityComparer<VolumeInstance>());
 
-                int volumeID = 0;
                 foreach (var room in _level.ExistingRooms)
                 {
                     foreach (var obj in room.Objects.OfType<CameraInstance>())

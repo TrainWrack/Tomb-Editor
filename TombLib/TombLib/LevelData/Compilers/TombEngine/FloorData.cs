@@ -348,9 +348,8 @@ namespace TombLib.LevelData.Compilers.TombEngine
                     index = _sinkTable[(SinkInstance)parameter];
                 else if (parameter is FlybyCameraInstance)
                     index = _flybyTable[(FlybyCameraInstance)parameter];
-                else if (parameter is VolumeInstance)
+                else if (parameter is VolumeInstance volume)
                 {
-                    VolumeInstance volume = (VolumeInstance)parameter;
                     if (!_volumeTable.TryGetValue(volume, out index))
                     {
                         _progressReporter.ReportWarn("Trigger '" + triggerDiagnostic + "' referring to illegal volume '" + volume + "'.");
