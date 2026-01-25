@@ -358,7 +358,14 @@ namespace TombLib.LevelData.Compilers.TombEngine
                 else if (parameter is FlybyCameraInstance)
                     index = _flybyTable[(FlybyCameraInstance)parameter];
                 else if (parameter is VolumeInstance)
-                    index = _volumeTable[(VolumeInstance)parameter];
+                {
+                    VolumeInstance volume = (VolumeInstance)parameter;
+                    if (!_volumeTable.TryGetValue(volume, out index))
+                    {
+                        _progressReporter.ReportWarn("Trigger '" + triggerDiagnostic + "') referring to illegal volume '" + volume + "'.");
+                        index = 0;
+                    }
+                }
                 else if (parameter is StaticInstance)
                 {
                     StaticInstance @object = (StaticInstance)parameter;
