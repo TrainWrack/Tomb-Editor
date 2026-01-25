@@ -82,6 +82,7 @@ namespace TombLib.NG
                 {
                     yield return TriggerTargetType.VolumeEvent;
                     yield return TriggerTargetType.GlobalEvent;
+                    yield return TriggerTargetType.VolumeObject;
                 }
             }
         }
@@ -174,6 +175,12 @@ namespace TombLib.NG
                         case TriggerTargetType.GlobalEvent:
                             if (levelSettings.GameVersion == TRVersion.Game.TombEngine)
                                 return new NgParameterRange(NgParameterKind.GlobalEventSets);
+                            else
+                                return new NgParameterRange(NgParameterKind.AnyNumber);
+
+                        case TriggerTargetType.VolumeObject:
+                            if (levelSettings.GameVersion == TRVersion.Game.TombEngine)
+                                return new NgParameterRange(NgParameterKind.VolumesInLevel);
                             else
                                 return new NgParameterRange(NgParameterKind.AnyNumber);
 

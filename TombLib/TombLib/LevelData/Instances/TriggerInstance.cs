@@ -45,7 +45,8 @@ namespace TombLib.LevelData
         FmvNg = 14,
         TimerfieldNg = 15,
         VolumeEvent = 16,
-        GlobalEvent = 17
+        GlobalEvent = 17,
+        VolumeObject = 18
     }
 
     public interface ITriggerParameter : IEquatable<ITriggerParameter>

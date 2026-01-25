@@ -53,6 +53,7 @@ namespace TombLib.LevelData.Compilers.TombEngine
         private Dictionary<SoundSourceInstance, int> _soundSourcesTable;
         private Dictionary<FlybyCameraInstance, int> _flybyTable;
         private Dictionary<StaticInstance, int> _staticsTable;
+        private Dictionary<VolumeInstance, int> _volumeTable;
 
         // Collected game limits
         private Dictionary<Limit, int> _limits;
@@ -207,7 +208,9 @@ namespace TombLib.LevelData.Compilers.TombEngine
                 _cameraTable = new Dictionary<CameraInstance, int>(new ReferenceEqualityComparer<CameraInstance>());
                 _sinkTable = new Dictionary<SinkInstance, int>(new ReferenceEqualityComparer<SinkInstance>());
                 _flybyTable = new Dictionary<FlybyCameraInstance, int>(new ReferenceEqualityComparer<FlybyCameraInstance>());
+                _volumeTable = new Dictionary<VolumeInstance, int>(new ReferenceEqualityComparer<VolumeInstance>());
 
+                int volumeID = 0;
                 foreach (var room in _level.ExistingRooms)
                 {
                     foreach (var obj in room.Objects.OfType<CameraInstance>())
@@ -216,6 +219,8 @@ namespace TombLib.LevelData.Compilers.TombEngine
                         _flybyTable.Add(obj, flybyID++);
                     foreach (var obj in room.Objects.OfType<SinkInstance>())
                         _sinkTable.Add(obj, sinkID++);
+                    foreach (var obj in room.Objects.OfType<VolumeInstance>())
+                        _volumeTable.Add(obj, volumeID++);
                 }
             }
 

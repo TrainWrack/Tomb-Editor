@@ -36,7 +36,8 @@ namespace TombLib.NG
         VolumeEventTypes,
         GlobalEventSets,
         GlobalEventTypes,
-        PluginEnumeration
+        PluginEnumeration,
+        VolumesInLevel
     }
 
     public struct NgLinearParameter
@@ -146,6 +147,7 @@ namespace TombLib.NG
                     case NgParameterKind.CamerasInLevel:
                     case NgParameterKind.SinksInLevel:
                     case NgParameterKind.FlybyCamerasInLevel:
+                    case NgParameterKind.VolumesInLevel:
                         return true;
                     case NgParameterKind.Choice:
                         foreach (var choice in Choices)
@@ -207,6 +209,8 @@ namespace TombLib.NG
                     return parameter is SinkInstance;
                 case NgParameterKind.FlybyCamerasInLevel:
                     return parameter is FlybyCameraInstance;
+                case NgParameterKind.VolumesInLevel:
+                    return parameter is VolumeInstance;
                 case NgParameterKind.Rooms255:
                     return parameter is Room;
                 case NgParameterKind.VolumeEventSets:
@@ -294,6 +298,9 @@ namespace TombLib.NG
 
                 case NgParameterKind.FlybyCamerasInLevel:
                     return level.ExistingRooms.SelectMany(room => room.Objects).OfType<FlybyCameraInstance>();
+
+                case NgParameterKind.VolumesInLevel:
+                    return level.ExistingRooms.SelectMany(room => room.Objects).OfType<VolumeInstance>();
 
                 case NgParameterKind.Rooms255:
                     return level.ExistingRooms;

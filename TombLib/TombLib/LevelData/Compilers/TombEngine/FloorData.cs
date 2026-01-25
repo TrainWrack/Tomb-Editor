@@ -310,6 +310,16 @@ namespace TombLib.LevelData.Compilers.TombEngine
 
                             break;
 
+                        case TriggerTargetType.VolumeObject:
+                            if (!(trigger.Target is VolumeInstance))
+                            {
+                                throw new Exception("A VolumeObject trigger must reference a volume instance! ('" + trigger + "')");
+                            }
+
+                            trigger2 = (ushort)(GetTriggerParameter(trigger.Target, trigger, _fdFunctionMask) | func);
+                            result.Add(trigger2);
+                            break;
+
                         default:
                             throw new Exception("Unknown trigger target found '" + trigger + "'");
                     }
@@ -347,6 +357,8 @@ namespace TombLib.LevelData.Compilers.TombEngine
                     index = _sinkTable[(SinkInstance)parameter];
                 else if (parameter is FlybyCameraInstance)
                     index = _flybyTable[(FlybyCameraInstance)parameter];
+                else if (parameter is VolumeInstance)
+                    index = _volumeTable[(VolumeInstance)parameter];
                 else if (parameter is StaticInstance)
                 {
                     StaticInstance @object = (StaticInstance)parameter;
