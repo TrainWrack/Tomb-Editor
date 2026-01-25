@@ -353,7 +353,7 @@ namespace TombLib.LevelData.Compilers.TombEngine
                     VolumeInstance volume = (VolumeInstance)parameter;
                     if (!_volumeTable.TryGetValue(volume, out index))
                     {
-                        _progressReporter.ReportWarn("Trigger '" + triggerDiagnostic + "') referring to illegal volume '" + volume + "'.");
+                        _progressReporter.ReportWarn("Trigger '" + triggerDiagnostic + "' referring to illegal volume '" + volume + "'.");
                         index = 0;
                     }
                 }
