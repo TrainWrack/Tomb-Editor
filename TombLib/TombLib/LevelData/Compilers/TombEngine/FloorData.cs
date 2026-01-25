@@ -255,6 +255,7 @@ namespace TombLib.LevelData.Compilers.TombEngine
                         case TriggerTargetType.PlayAudio:
                         case TriggerTargetType.FlipEffect:
                         case TriggerTargetType.Secret:
+                        case TriggerTargetType.VolumeObject:
                             trigger2 = (ushort)(GetTriggerParameter(trigger.Target, trigger, _fdFunctionMask) | func);
                             result.Add(trigger2);
                             break;
@@ -308,16 +309,6 @@ namespace TombLib.LevelData.Compilers.TombEngine
                                 result.Add(trigger2);
                             }
 
-                            break;
-
-                        case TriggerTargetType.VolumeObject:
-                            if (!(trigger.Target is VolumeInstance))
-                            {
-                                throw new Exception("A VolumeObject trigger must reference a volume instance! ('" + trigger + "')");
-                            }
-
-                            trigger2 = (ushort)(GetTriggerParameter(trigger.Target, trigger, _fdFunctionMask) | func);
-                            result.Add(trigger2);
                             break;
 
                         default:
