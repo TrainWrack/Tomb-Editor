@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MoveableProperties>
+  <Property name="HP" type="Integer">
+    <Default>100</Default>
+    <Description>Hit Points - enemy health</Description>
+    <Min>0</Min>
+    <Max>32767</Max>
+  </Property>
+  <Property name="OCB" type="Integer">
+    <Default>0</Default>
+    <Description>Object Combination Block identifier - controls special behaviors</Description>
+    <Min>-32768</Min>
+    <Max>32767</Max>
+  </Property>
+  <Property name="DamageType" type="Dropdown">
+    <Default>None</Default>
+    <Description>Type of damage dealt by this moveable</Description>
+    <Options>
+      <Option>None</Option>
+      <Option>Burn</Option>
+      <Option>Freeze</Option>
+      <Option>Electric</Option>
+      <Option>Poison</Option>
+    </Options>
+  </Property>
+  <Property name="AggroRange" type="Float">
+    <Default>5.0</Default>
+    <Description>Distance at which enemy becomes aggressive (in tiles)</Description>
+    <Min>0.0</Min>
+    <Max>50.0</Max>
+  </Property>
+  <Property name="IsBoss" type="Boolean">
+    <Default>false</Default>
+    <Description>Marks this enemy as a boss encounter</Description>
+  </Property>
+</MoveableProperties>

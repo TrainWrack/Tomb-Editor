@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<StaticProperties>
+  <Property name="ShatterSound" type="Dropdown">
+    <Default>None</Default>
+    <Description>Sound played when object shatters</Description>
+    <Options>
+      <Option>None</Option>
+      <Option>Stone</Option>
+      <Option>Wood</Option>
+      <Option>Glass</Option>
+      <Option>Custom</Option>
+    </Options>
+  </Property>
+  <Property name="HP" type="Integer">
+    <Default>150</Default>
+    <Description>Hit Points - object health</Description>
+    <Min>0</Min>
+    <Max>32767</Max>
+  </Property>
+  <Property name="Shatter" type="Boolean">
+    <Default>false</Default>
+    <Description>Whether the object can shatter when destroyed</Description>
+  </Property>
+  <Property name="Color" type="Checkbox">
+    <Description>Available color tints for this object</Description>
+    <Options>
+      <Option>Red</Option>
+      <Option>Blue</Option>
+      <Option>Green</Option>
+      <Option>Yellow</Option>
+    </Options>
+  </Property>
+</StaticProperties>

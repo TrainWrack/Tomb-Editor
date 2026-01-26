@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using TombLib.LevelData.Properties;
 using TombLib.Wad;
 
 namespace TombLib.LevelData
@@ -53,5 +54,8 @@ namespace TombLib.LevelData
             set { _scale = value; }
         }
         private float _scale = 1.0f;
+
+        // Custom properties for Tomb Engine
+        public PropertyCollection CustomProperties { get; set; } = new PropertyCollection();
     }
 }

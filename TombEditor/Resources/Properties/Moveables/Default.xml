@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MoveableProperties>
+  <Property name="HP" type="Integer">
+    <Default>100</Default>
+    <Description>Hit Points</Description>
+    <Min>0</Min>
+    <Max>32767</Max>
+  </Property>
+  <Property name="OCB" type="Integer">
+    <Default>0</Default>
+    <Description>Object Combination Block identifier</Description>
+    <Min>-32768</Min>
+    <Max>32767</Max>
+  </Property>
+</MoveableProperties>
