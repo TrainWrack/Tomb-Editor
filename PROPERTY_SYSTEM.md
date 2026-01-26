@@ -39,7 +39,7 @@ Level File (serialized with level data)
 
 ### Property Types
 
-The system supports five property types:
+The system supports six property types:
 
 | Type | Description | Example Controls |
 |------|-------------|-----------------|
@@ -48,6 +48,7 @@ The system supports five property types:
 | `Boolean` | True/false values | Radio buttons (True/False) |
 | `Dropdown` | Single selection from list | ComboBox |
 | `Checkbox` | Multiple selections | CheckBox list |
+| `Color` | Color selection | Color preview + hex input + picker |
 
 ### XML Schema
 
@@ -99,6 +100,11 @@ Example: `Enemy.xml`
     <Default>false</Default>
     <Description>Marks this enemy as a boss encounter</Description>
   </Property>
+  
+  <Property name="GlowColor" type="Color">
+    <Default>#FF0000</Default>
+    <Description>Color of the enemy's glow effect (hex format)</Description>
+  </Property>
 </MoveableProperties>
 ```
 
@@ -137,6 +143,11 @@ Example:
     <Description>Whether the object can shatter when destroyed</Description>
   </Property>
   
+  <Property name="TintColor" type="Color">
+    <Default>#FFFFFF</Default>
+    <Description>Color tint applied to the object</Description>
+  </Property>
+  
   <Property name="Color" type="Checkbox">
     <Description>Available color tints for this object</Description>
     <Options>
@@ -156,7 +167,7 @@ Example:
 | Attribute | Required | Type | Description |
 |-----------|----------|------|-------------|
 | `name` | Yes | string | Unique identifier for the property |
-| `type` | Yes | enum | One of: Integer, Float, Boolean, Dropdown, Checkbox |
+| `type` | Yes | enum | One of: Integer, Float, Boolean, Dropdown, Checkbox, Color |
 
 #### Child Elements
 
@@ -246,6 +257,17 @@ The WPF editor automatically creates appropriate controls based on property type
 - **Boolean**: True/False radio button group
 - **Dropdown**: ComboBox populated with options
 - **Checkbox**: Multiple checkboxes for multi-select
+- **Color**: Color preview box + hex text input + color picker button
+
+#### Color Property Features
+- Visual color preview rectangle showing current color
+- Hex text input (#RRGGBB format)
+- "Pick..." button opens Windows color picker dialog
+- Supports multiple color formats:
+  - Hex: `#RRGGBB` (e.g., `#FF0000` for red)
+  - RGB: `R,G,B` (e.g., `255,0,0` for red)
+- Real-time preview updates as you type
+- Batch mode shows gradient pattern for mixed colors
 
 ### Default Values
 

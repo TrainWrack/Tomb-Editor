@@ -114,6 +114,18 @@ Multiple selections from a list
 </Property>
 ```
 
+### Color
+Color picker with hex input
+```xml
+<Property name="GlowColor" type="Color">
+  <Default>#FF0000</Default>
+  <Description>Color of the glow effect (hex format #RRGGBB)</Description>
+</Property>
+```
+Supports formats:
+- Hex: `#RRGGBB` (e.g., `#FF0000` for red, `#00FF00` for green)
+- RGB: `R,G,B` (e.g., `255,0,0` for red)
+
 ## Examples
 
 See the included files for complete examples:

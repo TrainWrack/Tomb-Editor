@@ -219,6 +219,10 @@ namespace TombLib.LevelData.Properties
                         // For checkbox lists, default can be comma-separated values
                         return definition.Default.Split(',').Select(s => s.Trim()).ToList();
 
+                    case PropertyType.Color:
+                        // Color format: "#RRGGBB" or "R,G,B"
+                        return definition.Default;
+
                     default:
                         return definition.Default;
                 }
@@ -246,6 +250,8 @@ namespace TombLib.LevelData.Properties
                     return "";
                 case PropertyType.Checkbox:
                     return new List<string>();
+                case PropertyType.Color:
+                    return "#FFFFFF";
                 default:
                     return null;
             }

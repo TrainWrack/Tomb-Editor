@@ -33,4 +33,8 @@
     <Default>false</Default>
     <Description>Marks this enemy as a boss encounter</Description>
   </Property>
+  <Property name="GlowColor" type="Color">
+    <Default>#FF0000</Default>
+    <Description>Color of the enemy's glow effect</Description>
+  </Property>
 </MoveableProperties>

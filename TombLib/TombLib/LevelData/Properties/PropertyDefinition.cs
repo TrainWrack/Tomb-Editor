@@ -13,7 +13,8 @@ namespace TombLib.LevelData.Properties
         Float,
         Boolean,
         Dropdown,
-        Checkbox
+        Checkbox,
+        Color
     }
 
     /// <summary>

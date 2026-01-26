@@ -21,6 +21,10 @@
     <Default>false</Default>
     <Description>Whether the object can shatter when destroyed</Description>
   </Property>
+  <Property name="TintColor" type="Color">
+    <Default>#FFFFFF</Default>
+    <Description>Color tint applied to the object</Description>
+  </Property>
   <Property name="Color" type="Checkbox">
     <Description>Available color tints for this object</Description>
     <Options>

@@ -126,6 +126,9 @@ namespace TombEditor.Windows
                 case PropertyType.Checkbox:
                     return CreateCheckboxListControl(propDef, currentValue);
 
+                case PropertyType.Color:
+                    return CreateColorControl(propDef, currentValue);
+
                 default:
                     return CreateTextControl(propDef, currentValue);
             }
@@ -238,6 +241,149 @@ namespace TombEditor.Windows
             return stackPanel;
         }
 
+        private Control CreateColorControl(PropertyDefinition propDef, object currentValue)
+        {
+            var stackPanel = new StackPanel { Orientation = Orientation.Horizontal };
+
+            // Create color preview rectangle
+            var colorPreview = new System.Windows.Shapes.Rectangle
+            {
+                Width = 40,
+                Height = 25,
+                Stroke = new SolidColorBrush(System.Windows.Media.Color.FromRgb(85, 85, 85)),
+                StrokeThickness = 1,
+                Margin = new Thickness(0, 0, 10, 0)
+            };
+
+            // Parse current color
+            string colorStr = currentValue?.ToString() ?? propDef.Default ?? "#FFFFFF";
+            var color = ParseColor(colorStr);
+            colorPreview.Fill = new SolidColorBrush(color);
+
+            // Create text box for hex input
+            var textBox = new TextBox
+            {
+                Width = 80,
+                Text = ColorToHex(color),
+                Tag = colorPreview // Store reference to preview
+            };
+
+            // Update preview when text changes
+            textBox.TextChanged += (s, e) =>
+            {
+                var tb = s as TextBox;
+                if (tb != null && tb.Tag is System.Windows.Shapes.Rectangle rect)
+                {
+                    try
+                    {
+                        var newColor = ParseColor(tb.Text);
+                        rect.Fill = new SolidColorBrush(newColor);
+                    }
+                    catch
+                    {
+                        // Invalid color format, ignore
+                    }
+                }
+            };
+
+            // Create color picker button
+            var pickButton = new Button
+            {
+                Content = "Pick...",
+                Padding = new Thickness(5, 2, 5, 2),
+                Margin = new Thickness(5, 0, 0, 0)
+            };
+
+            pickButton.Click += (s, e) =>
+            {
+                // Use WPF color picker dialog
+                var colorDialog = new System.Windows.Forms.ColorDialog
+                {
+                    Color = System.Drawing.Color.FromArgb(color.R, color.G, color.B),
+                    FullOpen = true
+                };
+
+                if (colorDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    var selectedColor = System.Windows.Media.Color.FromRgb(
+                        colorDialog.Color.R,
+                        colorDialog.Color.G,
+                        colorDialog.Color.B);
+                    
+                    textBox.Text = ColorToHex(selectedColor);
+                    colorPreview.Fill = new SolidColorBrush(selectedColor);
+                }
+            };
+
+            stackPanel.Children.Add(colorPreview);
+            stackPanel.Children.Add(textBox);
+            stackPanel.Children.Add(pickButton);
+
+            return stackPanel;
+        }
+
+        /// <summary>
+        /// Parses a color string in various formats (#RRGGBB, R,G,B, etc.)
+        /// </summary>
+        private System.Windows.Media.Color ParseColor(string colorStr)
+        {
+            if (string.IsNullOrEmpty(colorStr))
+                return System.Windows.Media.Colors.White;
+
+            colorStr = colorStr.Trim();
+
+            // Hex format: #RRGGBB or RRGGBB
+            if (colorStr.StartsWith("#"))
+            {
+                colorStr = colorStr.Substring(1);
+            }
+
+            if (colorStr.Length == 6)
+            {
+                try
+                {
+                    byte r = Convert.ToByte(colorStr.Substring(0, 2), 16);
+                    byte g = Convert.ToByte(colorStr.Substring(2, 2), 16);
+                    byte b = Convert.ToByte(colorStr.Substring(4, 2), 16);
+                    return System.Windows.Media.Color.FromRgb(r, g, b);
+                }
+                catch
+                {
+                    return System.Windows.Media.Colors.White;
+                }
+            }
+
+            // RGB format: "R,G,B"
+            if (colorStr.Contains(","))
+            {
+                var parts = colorStr.Split(',');
+                if (parts.Length == 3)
+                {
+                    try
+                    {
+                        byte r = byte.Parse(parts[0].Trim());
+                        byte g = byte.Parse(parts[1].Trim());
+                        byte b = byte.Parse(parts[2].Trim());
+                        return System.Windows.Media.Color.FromRgb(r, g, b);
+                    }
+                    catch
+                    {
+                        return System.Windows.Media.Colors.White;
+                    }
+                }
+            }
+
+            return System.Windows.Media.Colors.White;
+        }
+
+        /// <summary>
+        /// Converts a WPF color to hex string format
+        /// </summary>
+        private string ColorToHex(System.Windows.Media.Color color)
+        {
+            return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+        }
+
         private Control CreateTextControl(PropertyDefinition propDef, object currentValue)
         {
             return new TextBox
@@ -339,6 +485,17 @@ namespace TombEditor.Windows
                     }
                     return new List<string>();
 
+                case PropertyType.Color:
+                    if (control is StackPanel spColor)
+                    {
+                        foreach (var child in spColor.Children)
+                        {
+                            if (child is TextBox tbColor)
+                                return tbColor.Text;
+                        }
+                    }
+                    return "#FFFFFF";
+
                 default:
                     if (control is TextBox tb)
                         return tb.Text;
@@ -424,6 +581,26 @@ namespace TombEditor.Windows
                         {
                             if (child is CheckBox chk)
                                 chk.IsChecked = defaults.Contains(chk.Tag?.ToString() ?? chk.Content?.ToString() ?? "");
+                        }
+                    }
+                    break;
+
+                case PropertyType.Color:
+                    if (control is StackPanel spColor)
+                    {
+                        string defaultColor = propDef.Default ?? "#FFFFFF";
+                        var color = ParseColor(defaultColor);
+                        
+                        foreach (var child in spColor.Children)
+                        {
+                            if (child is TextBox tbColor)
+                            {
+                                tbColor.Text = ColorToHex(color);
+                            }
+                            else if (child is System.Windows.Shapes.Rectangle rect)
+                            {
+                                rect.Fill = new SolidColorBrush(color);
+                            }
                         }
                     }
                     break;

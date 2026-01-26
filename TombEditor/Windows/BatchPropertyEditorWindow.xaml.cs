@@ -201,6 +201,94 @@ namespace TombEditor.Windows
 
                     return comboBox;
 
+                case PropertyType.Color:
+                    var colorPanel = new StackPanel { Orientation = Orientation.Horizontal };
+                    
+                    // Create color preview
+                    var colorPreview = new System.Windows.Shapes.Rectangle
+                    {
+                        Width = 40,
+                        Height = 25,
+                        Stroke = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(85, 85, 85)),
+                        StrokeThickness = 1,
+                        Margin = new System.Windows.Media.Thickness(0, 0, 10, 0)
+                    };
+
+                    // Parse color
+                    string colorStr = (valuesAreSame && commonValue != null) ? commonValue.ToString() : "<Mixed>";
+                    var colorTextBox = new TextBox
+                    {
+                        Width = 80,
+                        Text = colorStr,
+                        Tag = new { IsBatch = true, PropDef = propDef, Preview = colorPreview }
+                    };
+
+                    if (valuesAreSame && commonValue != null)
+                    {
+                        var color = ParseColor(colorStr);
+                        colorPreview.Fill = new System.Windows.Media.SolidColorBrush(color);
+                    }
+                    else
+                    {
+                        // Show gradient for mixed values
+                        colorPreview.Fill = new System.Windows.Media.LinearGradientBrush(
+                            System.Windows.Media.Colors.Red,
+                            System.Windows.Media.Colors.Blue,
+                            0);
+                    }
+
+                    colorTextBox.GotFocus += (s, e) =>
+                    {
+                        if (colorTextBox.Text == "<Mixed>")
+                            colorTextBox.Text = "#FFFFFF";
+                    };
+
+                    colorTextBox.TextChanged += (s, e) =>
+                    {
+                        if (colorTextBox.Text != "<Mixed>" && !string.IsNullOrEmpty(colorTextBox.Text))
+                        {
+                            try
+                            {
+                                var newColor = ParseColor(colorTextBox.Text);
+                                colorPreview.Fill = new System.Windows.Media.SolidColorBrush(newColor);
+                            }
+                            catch { }
+                        }
+                    };
+
+                    var pickButton = new Button
+                    {
+                        Content = "Pick...",
+                        Padding = new System.Windows.Media.Thickness(5, 2, 5, 2),
+                        Margin = new System.Windows.Media.Thickness(5, 0, 0, 0)
+                    };
+
+                    pickButton.Click += (s, e) =>
+                    {
+                        var currentColor = ParseColor(colorTextBox.Text == "<Mixed>" ? "#FFFFFF" : colorTextBox.Text);
+                        var colorDialog = new System.Windows.Forms.ColorDialog
+                        {
+                            Color = System.Drawing.Color.FromArgb(currentColor.R, currentColor.G, currentColor.B),
+                            FullOpen = true
+                        };
+
+                        if (colorDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                        {
+                            var selectedColor = System.Windows.Media.Color.FromRgb(
+                                colorDialog.Color.R,
+                                colorDialog.Color.G,
+                                colorDialog.Color.B);
+                            
+                            colorTextBox.Text = ColorToHex(selectedColor);
+                        }
+                    };
+
+                    colorPanel.Children.Add(colorPreview);
+                    colorPanel.Children.Add(colorTextBox);
+                    colorPanel.Children.Add(pickButton);
+
+                    return colorPanel;
+
                 default:
                     return new TextBox { Text = valuesAreSame && commonValue != null ? commonValue.ToString() : "<Mixed Values>" };
             }
@@ -261,17 +349,28 @@ namespace TombEditor.Windows
         private bool IsValueModified(Control control, PropertyType type)
         {
             if (control is TextBox tb)
-                return !string.IsNullOrEmpty(tb.Text) && tb.Text != "<Mixed Values>";
+                return !string.IsNullOrEmpty(tb.Text) && tb.Text != "<Mixed Values>" && tb.Text != "<Mixed>";
             if (control is ComboBox cb)
                 return cb.SelectedIndex > 0; // Index 0 is "<Mixed Values>"
-            if (control is StackPanel sp && type == PropertyType.Boolean)
+            if (control is StackPanel sp)
             {
-                foreach (var child in sp.Children)
+                if (type == PropertyType.Boolean)
                 {
-                    if (child is RadioButton rb && rb.Content.ToString() == "<Mixed>" && rb.IsChecked == true)
-                        return false;
+                    foreach (var child in sp.Children)
+                    {
+                        if (child is RadioButton rb && rb.Content.ToString() == "<Mixed>" && rb.IsChecked == true)
+                            return false;
+                    }
+                    return true;
                 }
-                return true;
+                else if (type == PropertyType.Color)
+                {
+                    foreach (var child in sp.Children)
+                    {
+                        if (child is TextBox tbColor)
+                            return !string.IsNullOrEmpty(tbColor.Text) && tbColor.Text != "<Mixed>";
+                    }
+                }
             }
             return true;
         }
@@ -310,11 +409,84 @@ namespace TombEditor.Windows
                         return cb.SelectedItem?.ToString() ?? "";
                     return "";
 
+                case PropertyType.Color:
+                    if (control is StackPanel spColor)
+                    {
+                        foreach (var child in spColor.Children)
+                        {
+                            if (child is TextBox tbColor && tbColor.Text != "<Mixed>")
+                                return tbColor.Text;
+                        }
+                    }
+                    return "#FFFFFF";
+
                 default:
                     if (control is TextBox tb)
                         return tb.Text;
                     return "";
             }
+        }
+
+        /// <summary>
+        /// Parses a color string in various formats (#RRGGBB, R,G,B, etc.)
+        /// </summary>
+        private System.Windows.Media.Color ParseColor(string colorStr)
+        {
+            if (string.IsNullOrEmpty(colorStr))
+                return System.Windows.Media.Colors.White;
+
+            colorStr = colorStr.Trim();
+
+            // Hex format: #RRGGBB or RRGGBB
+            if (colorStr.StartsWith("#"))
+            {
+                colorStr = colorStr.Substring(1);
+            }
+
+            if (colorStr.Length == 6)
+            {
+                try
+                {
+                    byte r = Convert.ToByte(colorStr.Substring(0, 2), 16);
+                    byte g = Convert.ToByte(colorStr.Substring(2, 2), 16);
+                    byte b = Convert.ToByte(colorStr.Substring(4, 2), 16);
+                    return System.Windows.Media.Color.FromRgb(r, g, b);
+                }
+                catch
+                {
+                    return System.Windows.Media.Colors.White;
+                }
+            }
+
+            // RGB format: "R,G,B"
+            if (colorStr.Contains(","))
+            {
+                var parts = colorStr.Split(',');
+                if (parts.Length == 3)
+                {
+                    try
+                    {
+                        byte r = byte.Parse(parts[0].Trim());
+                        byte g = byte.Parse(parts[1].Trim());
+                        byte b = byte.Parse(parts[2].Trim());
+                        return System.Windows.Media.Color.FromRgb(r, g, b);
+                    }
+                    catch
+                    {
+                        return System.Windows.Media.Colors.White;
+                    }
+                }
+            }
+
+            return System.Windows.Media.Colors.White;
+        }
+
+        /// <summary>
+        /// Converts a WPF color to hex string format
+        /// </summary>
+        private string ColorToHex(System.Windows.Media.Color color)
+        {
+            return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
         }
 
         private void SetPropertyValue(ItemInstance instance, string propertyName, object value)
