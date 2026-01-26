@@ -19,6 +19,7 @@
             this.panelItem = new TombEditor.Controls.PanelRenderingItem();
             this.panelHeader = new System.Windows.Forms.Panel();
             this.butAddItem = new DarkUI.Controls.DarkButton();
+            this.butFilter = new DarkUI.Controls.DarkButton();
             this.comboItems = new TombLib.Controls.DarkSearchableComboBox();
             this.panelRightBottom = new System.Windows.Forms.Panel();
             this.lblFromWad = new DarkUI.Controls.DarkLabel();
@@ -48,6 +49,7 @@
             // panelHeader
             // 
             this.panelHeader.Controls.Add(this.butAddItem);
+            this.panelHeader.Controls.Add(this.butFilter);
             this.panelHeader.Controls.Add(this.comboItems);
             this.panelHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelHeader.Location = new System.Drawing.Point(0, 25);
@@ -67,13 +69,25 @@
             this.butAddItem.TabIndex = 3;
             this.butAddItem.Tag = "AddItem";
             // 
+            // butFilter
+            // 
+            this.butFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.butFilter.Checked = false;
+            this.butFilter.Image = global::TombEditor.Properties.Resources.general_filter_16;
+            this.butFilter.Location = new System.Drawing.Point(231, 2);
+            this.butFilter.Name = "butFilter";
+            this.butFilter.Size = new System.Drawing.Size(24, 23);
+            this.butFilter.TabIndex = 2;
+            this.toolTip.SetToolTip(this.butFilter, "Filter items");
+            this.butFilter.Click += new System.EventHandler(this.butFilter_Click);
+            // 
             // comboItems
             // 
             this.comboItems.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.comboItems.Location = new System.Drawing.Point(3, 2);
             this.comboItems.Name = "comboItems";
-            this.comboItems.Size = new System.Drawing.Size(249, 23);
+            this.comboItems.Size = new System.Drawing.Size(222, 23);
             this.comboItems.TabIndex = 1;
             this.comboItems.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.comboItems_Format);
             this.comboItems.SelectedIndexChanged += new System.EventHandler(this.comboItems_SelectedIndexChanged);
@@ -185,6 +199,7 @@
         private Controls.PanelRenderingItem panelItem;
         private System.Windows.Forms.Panel panelHeader;
         private DarkUI.Controls.DarkButton butAddItem;
+        private DarkUI.Controls.DarkButton butFilter;
         private TombLib.Controls.DarkSearchableComboBox comboItems;
         private System.Windows.Forms.Panel panelRightBottom;
         private System.Windows.Forms.Panel panelRight;

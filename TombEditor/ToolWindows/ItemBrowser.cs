@@ -1,5 +1,6 @@
 ﻿using DarkUI.Docking;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -13,6 +14,8 @@ namespace TombEditor.ToolWindows
     public partial class ItemBrowser : DarkToolWindow
     {
         private readonly Editor _editor;
+        private HashSet<string> _selectedCategories = new HashSet<string>();
+        private bool _staticsOnlyFilter = false;
 
         public ItemBrowser()
         {
@@ -46,18 +49,7 @@ namespace TombEditor.ToolWindows
                 obj is Editor.GameVersionChangedEvent ||
                 obj is Editor.ConfigurationChangedEvent)
             {
-                var allMoveables = _editor.Level.Settings.WadGetAllMoveables();
-                var allStatics   = _editor.Level.Settings.WadGetAllStatics();
-
-                comboItems.GameVersion = _editor.Level.Settings.GameVersion;
-                comboItems.Items.Clear();
-                foreach (var moveable in allMoveables.Values)
-                    if (!_editor.Configuration.RenderingItem_HideInternalObjects ||
-                        !TrCatalog.IsHidden(_editor.Level.Settings.GameVersion, moveable.Id.TypeId))
-                        comboItems.Items.Add(moveable);
-                
-                foreach (var staticMesh in allStatics.Values)
-                    comboItems.Items.Add(staticMesh);
+                PopulateItemsList();
 
                 if (comboItems.Items.Count > 0)
                 {
@@ -73,6 +65,9 @@ namespace TombEditor.ToolWindows
                     else
                     {
                         comboItems.SelectedIndex = 0;
+
+                        var allMoveables = _editor.Level.Settings.WadGetAllMoveables();
+                        var allStatics = _editor.Level.Settings.WadGetAllStatics();
 
                         // Update visible conflicting item, otherwise it's not updated in 3D control.
                         if (comboItems.SelectedItem is WadMoveable)
@@ -228,6 +223,113 @@ namespace TombEditor.ToolWindows
                 comboItems.SelectedIndex++;
             else
                 comboItems.SelectedIndex = 0;
+        }
+
+        private void PopulateItemsList()
+        {
+            var allMoveables = _editor.Level.Settings.WadGetAllMoveables();
+            var allStatics = _editor.Level.Settings.WadGetAllStatics();
+
+            comboItems.GameVersion = _editor.Level.Settings.GameVersion;
+            comboItems.Items.Clear();
+
+            // Add moveables with filtering
+            if (!_staticsOnlyFilter)
+            {
+                foreach (var moveable in allMoveables.Values)
+                {
+                    if (!_editor.Configuration.RenderingItem_HideInternalObjects ||
+                        !TrCatalog.IsHidden(_editor.Level.Settings.GameVersion, moveable.Id.TypeId))
+                    {
+                        // Apply category filter if any categories are selected
+                        if (_selectedCategories.Count == 0 || ShouldIncludeMoveable(moveable))
+                        {
+                            comboItems.Items.Add(moveable);
+                        }
+                    }
+                }
+            }
+
+            // Add statics with filtering
+            foreach (var staticMesh in allStatics.Values)
+            {
+                // Apply category filter if any categories are selected
+                if (_selectedCategories.Count == 0 || ShouldIncludeStatic(staticMesh))
+                {
+                    comboItems.Items.Add(staticMesh);
+                }
+            }
+        }
+
+        private bool ShouldIncludeMoveable(WadMoveable moveable)
+        {
+            var category = TrCatalog.GetMoveableCategory(_editor.Level.Settings.GameVersion, moveable.Id.TypeId);
+            return !string.IsNullOrEmpty(category) && _selectedCategories.Contains(category);
+        }
+
+        private bool ShouldIncludeStatic(WadStatic staticMesh)
+        {
+            var category = TrCatalog.GetStaticCategory(_editor.Level.Settings.GameVersion, staticMesh.Id.TypeId);
+            return !string.IsNullOrEmpty(category) && _selectedCategories.Contains(category);
+        }
+
+        private void butFilter_Click(object sender, EventArgs e)
+        {
+            // Get all available categories from the current game version
+            var moveableCategories = TrCatalog.GetAllMoveableCategories(_editor.Level.Settings.GameVersion).ToList();
+            var staticCategories = TrCatalog.GetAllStaticCategories(_editor.Level.Settings.GameVersion).ToList();
+            var allCategories = moveableCategories.Union(staticCategories).Distinct().OrderBy(c => c).ToList();
+
+            // Create context menu
+            var contextMenu = new DarkUI.Controls.DarkContextMenu();
+
+            // Add "Clear Filter" option
+            var clearItem = new System.Windows.Forms.ToolStripMenuItem("Clear Filter");
+            clearItem.Checked = _selectedCategories.Count == 0 && !_staticsOnlyFilter;
+            clearItem.Click += (s, ev) =>
+            {
+                _selectedCategories.Clear();
+                _staticsOnlyFilter = false;
+                PopulateItemsList();
+            };
+            contextMenu.Items.Add(clearItem);
+
+            // Add "Statics Only" option
+            var staticsOnlyItem = new System.Windows.Forms.ToolStripMenuItem("Statics Only");
+            staticsOnlyItem.Checked = _staticsOnlyFilter;
+            staticsOnlyItem.Click += (s, ev) =>
+            {
+                _staticsOnlyFilter = !_staticsOnlyFilter;
+                if (_staticsOnlyFilter)
+                    _selectedCategories.Clear(); // Clear category filters when enabling statics only
+                PopulateItemsList();
+            };
+            contextMenu.Items.Add(staticsOnlyItem);
+
+            // Add separator
+            contextMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
+
+            // Add category items
+            foreach (var category in allCategories)
+            {
+                var categoryItem = new System.Windows.Forms.ToolStripMenuItem(category);
+                categoryItem.Checked = _selectedCategories.Contains(category);
+                categoryItem.Click += (s, ev) =>
+                {
+                    if (_selectedCategories.Contains(category))
+                        _selectedCategories.Remove(category);
+                    else
+                    {
+                        _selectedCategories.Add(category);
+                        _staticsOnlyFilter = false; // Disable statics only when selecting categories
+                    }
+                    PopulateItemsList();
+                };
+                contextMenu.Items.Add(categoryItem);
+            }
+
+            // Show the menu below the filter button
+            contextMenu.Show(butFilter, new System.Drawing.Point(0, butFilter.Height));
         }
     }
 }
