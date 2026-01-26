@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MoveableProperties>
+  <Property name="HP" type="Integer">
+    <Default>100</Default>
+    <Description>Hit Points</Description>
+    <Min>0</Min>
+    <Max>32767</Max>
+  </Property>
+  
+  <Property name="OCB" type="Integer">
+    <Default>0</Default>
+    <Description>Object Combination Block identifier - controls door behavior</Description>
+    <Min>-32768</Min>
+    <Max>32767</Max>
+  </Property>
+  
+  <Property name="OpenSpeed" type="Float">
+    <Default>1.0</Default>
+    <Description>Speed at which the door opens (1.0 = normal)</Description>
+    <Min>0.1</Min>
+    <Max>5.0</Max>
+  </Property>
+  
+  <Property name="AutoClose" type="Boolean">
+    <Default>false</Default>
+    <Description>Door automatically closes after opening</Description>
+  </Property>
+  
+  <Property name="AutoCloseDelay" type="Float">
+    <Default>3.0</Default>
+    <Description>Seconds before door auto-closes (if AutoClose is true)</Description>
+    <Min>0.5</Min>
+    <Max>60.0</Max>
+  </Property>
+  
+  <Property name="OpenSound" type="Dropdown">
+    <Default>Stone</Default>
+    <Description>Sound effect when door opens</Description>
+    <Options>
+      <Option>Stone</Option>
+      <Option>Wood</Option>
+      <Option>Metal</Option>
+      <Option>Glass</Option>
+      <Option>None</Option>
+    </Options>
+  </Property>
+  
+  <Property name="RequiredKey" type="Dropdown">
+    <Default>None</Default>
+    <Description>Key required to open this door</Description>
+    <Options>
+      <Option>None</Option>
+      <Option>Key1</Option>
+      <Option>Key2</Option>
+      <Option>Key3</Option>
+      <Option>Key4</Option>
+      <Option>Puzzle1</Option>
+      <Option>Puzzle2</Option>
+    </Options>
+  </Property>
+</MoveableProperties>

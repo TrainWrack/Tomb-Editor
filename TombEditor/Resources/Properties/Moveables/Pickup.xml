@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MoveableProperties>
+  <Property name="HP" type="Integer">
+    <Default>1</Default>
+    <Description>Hit Points (pickups are destroyed when collected)</Description>
+    <Min>1</Min>
+    <Max>1</Max>
+  </Property>
+  
+  <Property name="OCB" type="Integer">
+    <Default>0</Default>
+    <Description>Object Combination Block identifier</Description>
+    <Min>-32768</Min>
+    <Max>32767</Max>
+  </Property>
+  
+  <Property name="PickupType" type="Dropdown">
+    <Default>SmallMedipack</Default>
+    <Description>Type of pickup item</Description>
+    <Options>
+      <Option>SmallMedipack</Option>
+      <Option>LargeMedipack</Option>
+      <Option>Flares</Option>
+      <Option>Ammo</Option>
+      <Option>Weapon</Option>
+      <Option>Artifact</Option>
+    </Options>
+  </Property>
+  
+  <Property name="Amount" type="Integer">
+    <Default>1</Default>
+    <Description>Amount or quantity provided by this pickup</Description>
+    <Min>1</Min>
+    <Max>999</Max>
+  </Property>
+  
+  <Property name="Respawn" type="Boolean">
+    <Default>false</Default>
+    <Description>Does this pickup respawn after being collected</Description>
+  </Property>
+  
+  <Property name="RespawnTime" type="Float">
+    <Default>30.0</Default>
+    <Description>Seconds before pickup respawns (if Respawn is true)</Description>
+    <Min>1.0</Min>
+    <Max>600.0</Max>
+  </Property>
+  
+  <Property name="CollectionSound" type="Dropdown">
+    <Default>Default</Default>
+    <Description>Sound played when pickup is collected</Description>
+    <Options>
+      <Option>Default</Option>
+      <Option>Health</Option>
+      <Option>Ammo</Option>
+      <Option>Key</Option>
+      <Option>Artifact</Option>
+      <Option>None</Option>
+    </Options>
+  </Property>
+  
+  <Property name="ShowHUD" type="Boolean">
+    <Default>true</Default>
+    <Description>Display collection message on HUD</Description>
+  </Property>
+</MoveableProperties>
