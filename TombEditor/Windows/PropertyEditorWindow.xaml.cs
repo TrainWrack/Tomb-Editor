@@ -157,10 +157,21 @@ namespace TombEditor.Windows
                 Text = currentValue?.ToString() ?? propDef.Default ?? "0.0"
             };
 
-            // Add validation for floats
+            // Add validation for floats during typing
             textBox.PreviewTextInput += (s, e) =>
             {
-                e.Handled = !IsValidFloat(((TextBox)s).Text + e.Text);
+                e.Handled = !IsValidFloatPartial(((TextBox)s).Text + e.Text);
+            };
+
+            // Ensure valid float when focus is lost
+            textBox.LostFocus += (s, e) =>
+            {
+                var tb = s as TextBox;
+                if (!float.TryParse(tb.Text, out float val))
+                {
+                    // Reset to default if invalid
+                    tb.Text = propDef.Default ?? "0.0";
+                }
             };
 
             return textBox;
@@ -513,7 +524,14 @@ namespace TombEditor.Windows
                 if (propertyName == "HP")
                     moveable.CustomProperties.SetProperty("HP", value);
                 else if (propertyName == "OCB" && value is int ocb)
+                {
+                    // Clamp to short range to prevent overflow
+                    if (ocb > short.MaxValue)
+                        ocb = short.MaxValue;
+                    else if (ocb < short.MinValue)
+                        ocb = short.MinValue;
                     moveable.Ocb = (short)ocb;
+                }
                 else
                     moveable.CustomProperties.SetProperty(propertyName, value);
             }
@@ -522,7 +540,14 @@ namespace TombEditor.Windows
                 if (propertyName == "HP")
                     staticMesh.CustomProperties.SetProperty("HP", value);
                 else if (propertyName == "OCB" && value is int ocb)
+                {
+                    // Clamp to short range to prevent overflow
+                    if (ocb > short.MaxValue)
+                        ocb = short.MaxValue;
+                    else if (ocb < short.MinValue)
+                        ocb = short.MinValue;
                     staticMesh.Ocb = (short)ocb;
+                }
                 else
                     staticMesh.CustomProperties.SetProperty(propertyName, value);
             }
@@ -618,9 +643,15 @@ namespace TombEditor.Windows
             return int.TryParse(text, out _) || text == "-" || string.IsNullOrEmpty(text);
         }
 
+        private bool IsValidFloatPartial(string text)
+        {
+            // Allow partial input during typing
+            return float.TryParse(text, out _) || text == "-" || text.EndsWith(".") || string.IsNullOrEmpty(text);
+        }
+
         private bool IsValidFloat(string text)
         {
-            return float.TryParse(text, out _) || text == "-" || text.EndsWith(".") || string.IsNullOrEmpty(text);
+            return float.TryParse(text, out _);
         }
 
         // Event handlers

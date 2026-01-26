@@ -375,22 +375,33 @@ namespace TombEditor.Windows
             return true;
         }
 
+        /// <summary>
+        /// Extracts the value from a WPF control
+        /// </summary>
         private object ExtractValueFromControl(Control control, PropertyType type)
         {
-            // Reuse the same logic from PropertyEditorWindow
-            var tempEditor = new PropertyEditorWindow(_instances[0], _isTombEngine);
-            // For simplicity, use inline extraction
-            
             switch (type)
             {
                 case PropertyType.Integer:
-                    if (control is TextBox tb1 && int.TryParse(tb1.Text, out int intVal))
-                        return intVal;
+                    if (control is StackPanel spInt)
+                    {
+                        foreach (var child in spInt.Children)
+                        {
+                            if (child is TextBox tbInt && int.TryParse(tbInt.Text, out int intVal))
+                                return intVal;
+                        }
+                    }
                     return 0;
 
                 case PropertyType.Float:
-                    if (control is TextBox tb2 && float.TryParse(tb2.Text, out float floatVal))
-                        return floatVal;
+                    if (control is StackPanel spFloat)
+                    {
+                        foreach (var child in spFloat.Children)
+                        {
+                            if (child is TextBox tbFloat && float.TryParse(tbFloat.Text, out float floatVal))
+                                return floatVal;
+                        }
+                    }
                     return 0.0f;
 
                 case PropertyType.Boolean:
@@ -496,7 +507,14 @@ namespace TombEditor.Windows
                 if (propertyName == "HP")
                     moveable.CustomProperties.SetProperty("HP", value);
                 else if (propertyName == "OCB" && value is int ocb)
+                {
+                    // Clamp to short range to prevent overflow
+                    if (ocb > short.MaxValue)
+                        ocb = short.MaxValue;
+                    else if (ocb < short.MinValue)
+                        ocb = short.MinValue;
                     moveable.Ocb = (short)ocb;
+                }
                 else
                     moveable.CustomProperties.SetProperty(propertyName, value);
             }
@@ -505,7 +523,14 @@ namespace TombEditor.Windows
                 if (propertyName == "HP")
                     staticMesh.CustomProperties.SetProperty("HP", value);
                 else if (propertyName == "OCB" && value is int ocb)
+                {
+                    // Clamp to short range to prevent overflow
+                    if (ocb > short.MaxValue)
+                        ocb = short.MaxValue;
+                    else if (ocb < short.MinValue)
+                        ocb = short.MinValue;
                     staticMesh.Ocb = (short)ocb;
+                }
                 else
                     staticMesh.CustomProperties.SetProperty(propertyName, value);
             }
