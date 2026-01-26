@@ -257,17 +257,16 @@ The WPF editor automatically creates appropriate controls based on property type
 - **Boolean**: True/False radio button group
 - **Dropdown**: ComboBox populated with options
 - **Checkbox**: Multiple checkboxes for multi-select
-- **Color**: Color preview box + hex text input + color picker button
+- **Color**: WPF color picker with RGB sliders and live preview
 
 #### Color Property Features
-- Visual color preview rectangle showing current color
-- Hex text input (#RRGGBB format)
-- "Pick..." button opens Windows color picker dialog
-- Supports multiple color formats:
-  - Hex: `#RRGGBB` (e.g., `#FF0000` for red)
-  - RGB: `R,G,B` (e.g., `255,0,0` for red)
-- Real-time preview updates as you type
-- Batch mode shows gradient pattern for mixed colors
+- Large visual color preview rectangle (40px height)
+- Three RGB sliders (Red, Green, Blue) with value displays
+- Real-time color preview as you adjust sliders
+- Hex color display (read-only) showing current value
+- Each slider ranges from 0-255
+- Smooth gradient rendering on sliders
+- Batch mode: Shows gradient pattern for mixed colors, sliders start at average values
 
 ### Default Values
 

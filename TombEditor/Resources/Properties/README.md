@@ -115,16 +115,15 @@ Multiple selections from a list
 ```
 
 ### Color
-Color picker with hex input
+Color picker with RGB sliders
 ```xml
 <Property name="GlowColor" type="Color">
   <Default>#FF0000</Default>
   <Description>Color of the glow effect (hex format #RRGGBB)</Description>
 </Property>
 ```
-Supports formats:
-- Hex: `#RRGGBB` (e.g., `#FF0000` for red, `#00FF00` for green)
-- RGB: `R,G,B` (e.g., `255,0,0` for red)
+Supports hex format: `#RRGGBB` (e.g., `#FF0000` for red, `#00FF00` for green)
+UI features RGB sliders (0-255 for each channel) with live preview
 
 ## Examples
 

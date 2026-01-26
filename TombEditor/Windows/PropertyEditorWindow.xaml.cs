@@ -254,83 +254,168 @@ namespace TombEditor.Windows
 
         private Control CreateColorControl(PropertyDefinition propDef, object currentValue)
         {
-            var stackPanel = new StackPanel { Orientation = Orientation.Horizontal };
-
-            // Create color preview rectangle
-            var colorPreview = new System.Windows.Shapes.Rectangle
-            {
-                Width = 40,
-                Height = 25,
-                Stroke = new SolidColorBrush(System.Windows.Media.Color.FromRgb(85, 85, 85)),
-                StrokeThickness = 1,
-                Margin = new Thickness(0, 0, 10, 0)
-            };
+            var mainPanel = new StackPanel();
 
             // Parse current color
             string colorStr = currentValue?.ToString() ?? propDef.Default ?? "#FFFFFF";
             var color = ParseColor(colorStr);
-            colorPreview.Fill = new SolidColorBrush(color);
 
-            // Create text box for hex input
-            var textBox = new TextBox
+            // Create a large color preview
+            var colorPreview = new System.Windows.Shapes.Rectangle
             {
-                Width = 80,
+                Height = 40,
+                Stroke = new SolidColorBrush(System.Windows.Media.Color.FromRgb(85, 85, 85)),
+                StrokeThickness = 1,
+                Margin = new Thickness(0, 0, 0, 10),
+                Fill = new SolidColorBrush(color)
+            };
+
+            // RGB Sliders Panel
+            var rgbPanel = new StackPanel();
+
+            // Red slider
+            var redPanel = CreateColorSliderPanel("Red:", color.R, System.Windows.Media.Colors.Red, 
+                (value) => UpdateColorFromSliders(colorPreview, rgbPanel));
+            
+            // Green slider
+            var greenPanel = CreateColorSliderPanel("Green:", color.G, System.Windows.Media.Colors.Green,
+                (value) => UpdateColorFromSliders(colorPreview, rgbPanel));
+            
+            // Blue slider
+            var bluePanel = CreateColorSliderPanel("Blue:", color.B, System.Windows.Media.Colors.Blue,
+                (value) => UpdateColorFromSliders(colorPreview, rgbPanel));
+
+            rgbPanel.Children.Add(redPanel);
+            rgbPanel.Children.Add(greenPanel);
+            rgbPanel.Children.Add(bluePanel);
+
+            // Hex display (read-only)
+            var hexPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 0) };
+            var hexLabel = new TextBlock
+            {
+                Text = "Hex: ",
+                Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(241, 241, 241)),
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 5, 0)
+            };
+            var hexValue = new TextBlock
+            {
                 Text = ColorToHex(color),
-                Tag = colorPreview // Store reference to preview
+                Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(170, 170, 170)),
+                VerticalAlignment = VerticalAlignment.Center,
+                FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+                Tag = "HexDisplay"
+            };
+            hexPanel.Children.Add(hexLabel);
+            hexPanel.Children.Add(hexValue);
+
+            // Store references for value extraction
+            colorPreview.Tag = new { RedPanel = redPanel, GreenPanel = greenPanel, BluePanel = bluePanel, HexDisplay = hexValue };
+
+            mainPanel.Children.Add(colorPreview);
+            mainPanel.Children.Add(rgbPanel);
+            mainPanel.Children.Add(hexPanel);
+
+            return mainPanel;
+        }
+
+        /// <summary>
+        /// Creates a color slider panel with label, slider, and value display
+        /// </summary>
+        private StackPanel CreateColorSliderPanel(string label, byte initialValue, System.Windows.Media.Color accentColor, Action<byte> onValueChanged)
+        {
+            var panel = new StackPanel { Margin = new Thickness(0, 2, 0, 2) };
+
+            // Header with label and value
+            var headerPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            var labelText = new TextBlock
+            {
+                Text = label,
+                Width = 50,
+                Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(241, 241, 241)),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            var valueText = new TextBlock
+            {
+                Text = initialValue.ToString(),
+                Width = 35,
+                Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(170, 170, 170)),
+                VerticalAlignment = VerticalAlignment.Center,
+                TextAlignment = TextAlignment.Right,
+                FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+                Tag = "ValueDisplay"
+            };
+            headerPanel.Children.Add(labelText);
+            headerPanel.Children.Add(valueText);
+
+            // Slider
+            var slider = new Slider
+            {
+                Minimum = 0,
+                Maximum = 255,
+                Value = initialValue,
+                TickFrequency = 1,
+                IsSnapToTickEnabled = true,
+                Margin = new Thickness(0, 2, 0, 0),
+                Tag = "ColorSlider"
             };
 
-            // Update preview when text changes
-            textBox.TextChanged += (s, e) =>
+            // Style the slider with accent color
+            slider.Foreground = new SolidColorBrush(accentColor);
+
+            // Update value display when slider changes
+            slider.ValueChanged += (s, e) =>
             {
-                var tb = s as TextBox;
-                if (tb != null && tb.Tag is System.Windows.Shapes.Rectangle rect)
+                valueText.Text = ((int)slider.Value).ToString();
+                onValueChanged((byte)slider.Value);
+            };
+
+            panel.Children.Add(headerPanel);
+            panel.Children.Add(slider);
+            panel.Tag = new { Slider = slider, ValueDisplay = valueText };
+
+            return panel;
+        }
+
+        /// <summary>
+        /// Updates the color preview and hex display when sliders change
+        /// </summary>
+        private void UpdateColorFromSliders(System.Windows.Shapes.Rectangle preview, StackPanel rgbPanel)
+        {
+            byte r = 0, g = 0, b = 0;
+
+            foreach (var child in rgbPanel.Children)
+            {
+                if (child is StackPanel sliderPanel && sliderPanel.Tag != null)
                 {
-                    try
+                    dynamic tag = sliderPanel.Tag;
+                    if (tag.Slider is Slider slider)
                     {
-                        var newColor = ParseColor(tb.Text);
-                        rect.Fill = new SolidColorBrush(newColor);
-                    }
-                    catch
-                    {
-                        // Invalid color format, ignore
+                        byte value = (byte)slider.Value;
+                        
+                        // Determine which component based on position
+                        if (rgbPanel.Children.IndexOf(sliderPanel) == 0)
+                            r = value;
+                        else if (rgbPanel.Children.IndexOf(sliderPanel) == 1)
+                            g = value;
+                        else if (rgbPanel.Children.IndexOf(sliderPanel) == 2)
+                            b = value;
                     }
                 }
-            };
+            }
 
-            // Create color picker button
-            var pickButton = new Button
+            var newColor = System.Windows.Media.Color.FromRgb(r, g, b);
+            preview.Fill = new SolidColorBrush(newColor);
+
+            // Update hex display if it exists
+            if (preview.Tag != null)
             {
-                Content = "Pick...",
-                Padding = new Thickness(5, 2, 5, 2),
-                Margin = new Thickness(5, 0, 0, 0)
-            };
-
-            pickButton.Click += (s, e) =>
-            {
-                // Use WPF color picker dialog
-                var colorDialog = new System.Windows.Forms.ColorDialog
+                dynamic previewTag = preview.Tag;
+                if (previewTag.HexDisplay is TextBlock hexDisplay)
                 {
-                    Color = System.Drawing.Color.FromArgb(color.R, color.G, color.B),
-                    FullOpen = true
-                };
-
-                if (colorDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    var selectedColor = System.Windows.Media.Color.FromRgb(
-                        colorDialog.Color.R,
-                        colorDialog.Color.G,
-                        colorDialog.Color.B);
-                    
-                    textBox.Text = ColorToHex(selectedColor);
-                    colorPreview.Fill = new SolidColorBrush(selectedColor);
+                    hexDisplay.Text = ColorToHex(newColor);
                 }
-            };
-
-            stackPanel.Children.Add(colorPreview);
-            stackPanel.Children.Add(textBox);
-            stackPanel.Children.Add(pickButton);
-
-            return stackPanel;
+            }
         }
 
         /// <summary>
@@ -499,10 +584,13 @@ namespace TombEditor.Windows
                 case PropertyType.Color:
                     if (control is StackPanel spColor)
                     {
+                        // Find the color preview rectangle which has the color info
                         foreach (var child in spColor.Children)
                         {
-                            if (child is TextBox tbColor)
-                                return tbColor.Text;
+                            if (child is System.Windows.Shapes.Rectangle rect && rect.Fill is SolidColorBrush brush)
+                            {
+                                return ColorToHex(brush.Color);
+                            }
                         }
                     }
                     return "#FFFFFF";
@@ -616,15 +704,26 @@ namespace TombEditor.Windows
                         string defaultColor = propDef.Default ?? "#FFFFFF";
                         var color = ParseColor(defaultColor);
                         
+                        // Find and update the color preview and sliders
                         foreach (var child in spColor.Children)
                         {
-                            if (child is TextBox tbColor)
-                            {
-                                tbColor.Text = ColorToHex(color);
-                            }
-                            else if (child is System.Windows.Shapes.Rectangle rect)
+                            if (child is System.Windows.Shapes.Rectangle rect)
                             {
                                 rect.Fill = new SolidColorBrush(color);
+                                
+                                // Update sliders if they exist
+                                if (rect.Tag != null)
+                                {
+                                    dynamic tag = rect.Tag;
+                                    UpdateSliderPanel(tag.RedPanel, color.R);
+                                    UpdateSliderPanel(tag.GreenPanel, color.G);
+                                    UpdateSliderPanel(tag.BluePanel, color.B);
+                                    
+                                    if (tag.HexDisplay is TextBlock hexDisplay)
+                                    {
+                                        hexDisplay.Text = ColorToHex(color);
+                                    }
+                                }
                             }
                         }
                     }
@@ -680,6 +779,25 @@ namespace TombEditor.Windows
         {
             DialogResult = false;
             Close();
+        }
+
+        /// <summary>
+        /// Updates a slider panel to a specific value
+        /// </summary>
+        private void UpdateSliderPanel(StackPanel sliderPanel, byte value)
+        {
+            if (sliderPanel?.Tag != null)
+            {
+                dynamic tag = sliderPanel.Tag;
+                if (tag.Slider is Slider slider)
+                {
+                    slider.Value = value;
+                }
+                if (tag.ValueDisplay is TextBlock valueDisplay)
+                {
+                    valueDisplay.Text = value.ToString();
+                }
+            }
         }
     }
 }

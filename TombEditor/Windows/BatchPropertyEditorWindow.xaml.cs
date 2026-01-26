@@ -202,30 +202,23 @@ namespace TombEditor.Windows
                     return comboBox;
 
                 case PropertyType.Color:
-                    var colorPanel = new StackPanel { Orientation = Orientation.Horizontal };
+                    var colorMainPanel = new StackPanel();
                     
+                    // Parse color
+                    string colorStr = (valuesAreSame && commonValue != null) ? commonValue.ToString() : "#FFFFFF";
+                    var color = valuesAreSame ? ParseColor(colorStr) : System.Windows.Media.Colors.Gray;
+
                     // Create color preview
                     var colorPreview = new System.Windows.Shapes.Rectangle
                     {
-                        Width = 40,
-                        Height = 25,
+                        Height = 40,
                         Stroke = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(85, 85, 85)),
                         StrokeThickness = 1,
-                        Margin = new System.Windows.Media.Thickness(0, 0, 10, 0)
-                    };
-
-                    // Parse color
-                    string colorStr = (valuesAreSame && commonValue != null) ? commonValue.ToString() : "<Mixed>";
-                    var colorTextBox = new TextBox
-                    {
-                        Width = 80,
-                        Text = colorStr,
-                        Tag = new { IsBatch = true, PropDef = propDef, Preview = colorPreview }
+                        Margin = new System.Windows.Media.Thickness(0, 0, 0, 10)
                     };
 
                     if (valuesAreSame && commonValue != null)
                     {
-                        var color = ParseColor(colorStr);
                         colorPreview.Fill = new System.Windows.Media.SolidColorBrush(color);
                     }
                     else
@@ -237,57 +230,53 @@ namespace TombEditor.Windows
                             0);
                     }
 
-                    colorTextBox.GotFocus += (s, e) =>
+                    // RGB Sliders Panel
+                    var rgbPanel = new StackPanel();
+
+                    // Red slider
+                    var redPanel = CreateBatchColorSliderPanel("Red:", valuesAreSame ? color.R : (byte)128, System.Windows.Media.Colors.Red,
+                        (value) => UpdateColorFromSliders(colorPreview, rgbPanel));
+
+                    // Green slider
+                    var greenPanel = CreateBatchColorSliderPanel("Green:", valuesAreSame ? color.G : (byte)128, System.Windows.Media.Colors.Green,
+                        (value) => UpdateColorFromSliders(colorPreview, rgbPanel));
+
+                    // Blue slider
+                    var bluePanel = CreateBatchColorSliderPanel("Blue:", valuesAreSame ? color.B : (byte)128, System.Windows.Media.Colors.Blue,
+                        (value) => UpdateColorFromSliders(colorPreview, rgbPanel));
+
+                    rgbPanel.Children.Add(redPanel);
+                    rgbPanel.Children.Add(greenPanel);
+                    rgbPanel.Children.Add(bluePanel);
+
+                    // Hex display
+                    var hexPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new System.Windows.Media.Thickness(0, 5, 0, 0) };
+                    var hexLabel = new TextBlock
                     {
-                        if (colorTextBox.Text == "<Mixed>")
-                            colorTextBox.Text = "#FFFFFF";
+                        Text = valuesAreSame ? "Hex: " : "Hex: <Mixed> → ",
+                        Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(241, 241, 241)),
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Margin = new System.Windows.Media.Thickness(0, 0, 5, 0)
                     };
-
-                    colorTextBox.TextChanged += (s, e) =>
+                    var hexValue = new TextBlock
                     {
-                        if (colorTextBox.Text != "<Mixed>" && !string.IsNullOrEmpty(colorTextBox.Text))
-                        {
-                            try
-                            {
-                                var newColor = ParseColor(colorTextBox.Text);
-                                colorPreview.Fill = new System.Windows.Media.SolidColorBrush(newColor);
-                            }
-                            catch { }
-                        }
+                        Text = valuesAreSame ? ColorToHex(color) : ColorToHex(System.Windows.Media.Color.FromRgb(128, 128, 128)),
+                        Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(170, 170, 170)),
+                        VerticalAlignment = VerticalAlignment.Center,
+                        FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+                        Tag = "HexDisplay"
                     };
+                    hexPanel.Children.Add(hexLabel);
+                    hexPanel.Children.Add(hexValue);
 
-                    var pickButton = new Button
-                    {
-                        Content = "Pick...",
-                        Padding = new System.Windows.Media.Thickness(5, 2, 5, 2),
-                        Margin = new System.Windows.Media.Thickness(5, 0, 0, 0)
-                    };
+                    // Store references
+                    colorPreview.Tag = new { RedPanel = redPanel, GreenPanel = greenPanel, BluePanel = bluePanel, HexDisplay = hexValue };
 
-                    pickButton.Click += (s, e) =>
-                    {
-                        var currentColor = ParseColor(colorTextBox.Text == "<Mixed>" ? "#FFFFFF" : colorTextBox.Text);
-                        var colorDialog = new System.Windows.Forms.ColorDialog
-                        {
-                            Color = System.Drawing.Color.FromArgb(currentColor.R, currentColor.G, currentColor.B),
-                            FullOpen = true
-                        };
+                    colorMainPanel.Children.Add(colorPreview);
+                    colorMainPanel.Children.Add(rgbPanel);
+                    colorMainPanel.Children.Add(hexPanel);
 
-                        if (colorDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                        {
-                            var selectedColor = System.Windows.Media.Color.FromRgb(
-                                colorDialog.Color.R,
-                                colorDialog.Color.G,
-                                colorDialog.Color.B);
-                            
-                            colorTextBox.Text = ColorToHex(selectedColor);
-                        }
-                    };
-
-                    colorPanel.Children.Add(colorPreview);
-                    colorPanel.Children.Add(colorTextBox);
-                    colorPanel.Children.Add(pickButton);
-
-                    return colorPanel;
+                    return colorMainPanel;
 
                 default:
                     return new TextBox { Text = valuesAreSame && commonValue != null ? commonValue.ToString() : "<Mixed Values>" };
@@ -365,11 +354,9 @@ namespace TombEditor.Windows
                 }
                 else if (type == PropertyType.Color)
                 {
-                    foreach (var child in sp.Children)
-                    {
-                        if (child is TextBox tbColor)
-                            return !string.IsNullOrEmpty(tbColor.Text) && tbColor.Text != "<Mixed>";
-                    }
+                    // Color is always considered modified since we show sliders
+                    // User intention to change is implied by opening the dialog
+                    return true;
                 }
             }
             return true;
@@ -423,10 +410,13 @@ namespace TombEditor.Windows
                 case PropertyType.Color:
                     if (control is StackPanel spColor)
                     {
+                        // Find the color preview rectangle which has the color info
                         foreach (var child in spColor.Children)
                         {
-                            if (child is TextBox tbColor && tbColor.Text != "<Mixed>")
-                                return tbColor.Text;
+                            if (child is System.Windows.Shapes.Rectangle rect && rect.Fill is SolidColorBrush brush)
+                            {
+                                return ColorToHex(brush.Color);
+                            }
                         }
                     }
                     return "#FFFFFF";
@@ -628,6 +618,102 @@ namespace TombEditor.Windows
                     return new List<string>();
                 default:
                     return null;
+            }
+        }
+
+        /// <summary>
+        /// Creates a color slider panel for batch editing
+        /// </summary>
+        private StackPanel CreateBatchColorSliderPanel(string label, byte initialValue, System.Windows.Media.Color accentColor, Action<byte> onValueChanged)
+        {
+            var panel = new StackPanel { Margin = new System.Windows.Media.Thickness(0, 2, 0, 2) };
+
+            // Header with label and value
+            var headerPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            var labelText = new TextBlock
+            {
+                Text = label,
+                Width = 50,
+                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(241, 241, 241)),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            var valueText = new TextBlock
+            {
+                Text = initialValue.ToString(),
+                Width = 35,
+                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(170, 170, 170)),
+                VerticalAlignment = VerticalAlignment.Center,
+                TextAlignment = TextAlignment.Right,
+                FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+                Tag = "ValueDisplay"
+            };
+            headerPanel.Children.Add(labelText);
+            headerPanel.Children.Add(valueText);
+
+            // Slider
+            var slider = new Slider
+            {
+                Minimum = 0,
+                Maximum = 255,
+                Value = initialValue,
+                TickFrequency = 1,
+                IsSnapToTickEnabled = true,
+                Margin = new System.Windows.Media.Thickness(0, 2, 0, 0),
+                Tag = "ColorSlider"
+            };
+
+            slider.Foreground = new System.Windows.Media.SolidColorBrush(accentColor);
+
+            slider.ValueChanged += (s, e) =>
+            {
+                valueText.Text = ((int)slider.Value).ToString();
+                onValueChanged((byte)slider.Value);
+            };
+
+            panel.Children.Add(headerPanel);
+            panel.Children.Add(slider);
+            panel.Tag = new { Slider = slider, ValueDisplay = valueText };
+
+            return panel;
+        }
+
+        /// <summary>
+        /// Updates the color preview and hex display when sliders change
+        /// </summary>
+        private void UpdateColorFromSliders(System.Windows.Shapes.Rectangle preview, StackPanel rgbPanel)
+        {
+            byte r = 0, g = 0, b = 0;
+
+            foreach (var child in rgbPanel.Children)
+            {
+                if (child is StackPanel sliderPanel && sliderPanel.Tag != null)
+                {
+                    dynamic tag = sliderPanel.Tag;
+                    if (tag.Slider is Slider slider)
+                    {
+                        byte value = (byte)slider.Value;
+
+                        if (rgbPanel.Children.IndexOf(sliderPanel) == 0)
+                            r = value;
+                        else if (rgbPanel.Children.IndexOf(sliderPanel) == 1)
+                            g = value;
+                        else if (rgbPanel.Children.IndexOf(sliderPanel) == 2)
+                            b = value;
+                    }
+                }
+            }
+
+            var newColor = System.Windows.Media.Color.FromRgb(r, g, b);
+            preview.Fill = new System.Windows.Media.SolidColorBrush(newColor);
+
+            // Update hex display
+            if (preview.Tag != null)
+            {
+                dynamic previewTag = preview.Tag;
+                if (previewTag.HexDisplay is TextBlock hexDisplay)
+                {
+                    hexDisplay.Text = ColorToHex(newColor);
+                }
             }
         }
     }
