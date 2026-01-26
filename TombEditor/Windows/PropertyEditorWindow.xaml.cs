@@ -33,9 +33,9 @@ namespace TombEditor.Windows
             if (instance is MoveableInstance moveable)
             {
                 TitleText.Text = "Moveable Properties";
-                SubtitleText.Text = $"Object: {moveable.WadObjectId}";
+                SubtitleText.Text = $"Object: {moveable.WadObjectId.ToString(TRVersion.Game.TombEngine)}";
                 
-                var propertySet = PropertyManager.Instance.GetMoveableProperties(moveable.WadObjectId.ToString());
+                var propertySet = PropertyManager.Instance.GetMoveableProperties(moveable.WadObjectId.ToString(TRVersion.Game.TombEngine));
                 _propertyDefinitions = propertySet.Properties;
             }
             else if (instance is StaticInstance staticMesh)
