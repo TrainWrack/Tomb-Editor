@@ -42,6 +42,12 @@ namespace TombEditor.Windows
         {
             if (_updating) return;
             
+            // During initialization, some controls might not be loaded yet
+            if (RedSlider == null || GreenSlider == null || BlueSlider == null ||
+                RedTextBox == null || GreenTextBox == null || BlueTextBox == null ||
+                HexTextBox == null || ColorPreview == null)
+                return;
+            
             _updating = true;
             
             byte r = (byte)RedSlider.Value;
@@ -63,6 +69,12 @@ namespace TombEditor.Windows
         private void RgbTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
             if (_updating) return;
+            
+            // During initialization, some controls might not be loaded yet
+            if (RedSlider == null || GreenSlider == null || BlueSlider == null ||
+                RedTextBox == null || GreenTextBox == null || BlueTextBox == null ||
+                HexTextBox == null || ColorPreview == null)
+                return;
             
             try
             {
@@ -91,6 +103,12 @@ namespace TombEditor.Windows
         private void HexTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
             if (_updating) return;
+            
+            // During initialization, some controls might not be loaded yet
+            if (RedSlider == null || GreenSlider == null || BlueSlider == null ||
+                RedTextBox == null || GreenTextBox == null || BlueTextBox == null ||
+                HexTextBox == null || ColorPreview == null)
+                return;
             
             try
             {
