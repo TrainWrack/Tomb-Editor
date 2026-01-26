@@ -21,18 +21,18 @@
             <Setter Property="BorderBrush" Value="#555555"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="4"/>
-            <Setter Property="Margin" Value="0,2,0,5"/>
+            <Setter Property="Margin" Value="0,2,0,2"/>
         </Style>
         <Style TargetType="ComboBox">
             <Setter Property="Background" Value="#3E3E42"/>
             <Setter Property="Foreground" Value="#F1F1F1"/>
             <Setter Property="BorderBrush" Value="#555555"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Margin" Value="0,2,0,5"/>
+            <Setter Property="Margin" Value="0,2,0,2"/>
         </Style>
         <Style TargetType="CheckBox">
             <Setter Property="Foreground" Value="#F1F1F1"/>
-            <Setter Property="Margin" Value="0,5,0,5"/>
+            <Setter Property="Margin" Value="0,2,0,2"/>
         </Style>
         <Style TargetType="RadioButton">
             <Setter Property="Foreground" Value="#F1F1F1"/>
@@ -47,12 +47,12 @@
             <Setter Property="Margin" Value="5"/>
             <Setter Property="MinWidth" Value="80"/>
         </Style>
-        <Style TargetType="GroupBox">
+        <!-- Style for property name labels -->
+        <Style x:Key="PropertyNameLabel" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#F1F1F1"/>
-            <Setter Property="BorderBrush" Value="#555555"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Margin" Value="0,5,0,5"/>
-            <Setter Property="Padding" Value="5"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+            <Setter Property="FontSize" Value="12"/>
         </Style>
     </Window.Resources>
 

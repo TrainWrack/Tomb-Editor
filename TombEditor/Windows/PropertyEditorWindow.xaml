@@ -21,18 +21,18 @@
             <Setter Property="BorderBrush" Value="#555555"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="4"/>
-            <Setter Property="Margin" Value="0,2,0,5"/>
+            <Setter Property="Margin" Value="0,2,0,2"/>
         </Style>
         <Style TargetType="ComboBox">
             <Setter Property="Background" Value="#3E3E42"/>
             <Setter Property="Foreground" Value="#F1F1F1"/>
             <Setter Property="BorderBrush" Value="#555555"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Margin" Value="0,2,0,5"/>
+            <Setter Property="Margin" Value="0,2,0,2"/>
         </Style>
         <Style TargetType="CheckBox">
             <Setter Property="Foreground" Value="#F1F1F1"/>
-            <Setter Property="Margin" Value="0,5,0,5"/>
+            <Setter Property="Margin" Value="0,2,0,2"/>
         </Style>
         <Style TargetType="RadioButton">
             <Setter Property="Foreground" Value="#F1F1F1"/>
@@ -47,11 +47,17 @@
             <Setter Property="Margin" Value="5"/>
             <Setter Property="MinWidth" Value="80"/>
         </Style>
-        <Style TargetType="GroupBox">
+        <!-- Style for property name labels -->
+        <Style x:Key="PropertyNameLabel" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#F1F1F1"/>
-            <Setter Property="BorderBrush" Value="#555555"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Margin" Value="0,5,0,5"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <!-- Style for property rows -->
+        <Style x:Key="PropertyRowBorder" TargetType="Border">
+            <Setter Property="BorderBrush" Value="#3E3E42"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="Padding" Value="5"/>
         </Style>
     </Window.Resources>
@@ -79,12 +85,12 @@
             </StackPanel>
         </Border>
 
-        <!-- Properties Panel -->
+        <!-- Properties Grid -->
         <ScrollViewer Grid.Row="1" 
                      VerticalScrollBarVisibility="Auto"
-                     Margin="10">
+                     Margin="0">
             <StackPanel x:Name="PropertiesPanel">
-                <!-- Dynamic properties will be added here -->
+                <!-- Dynamic property grid rows will be added here -->
             </StackPanel>
         </ScrollViewer>
 
