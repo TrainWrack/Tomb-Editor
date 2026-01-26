@@ -1041,12 +1041,12 @@ namespace TombEditor
             }
             else if (instance is StaticInstance)
             {
-                // Use static editing dialog only for NG levels for now (bypass it if Ctrl/Alt key is pressed)
-                if (instance.CanBeColored() && (!_editor.Level.IsNG || Control.ModifierKeys.HasFlag(Keys.Control)))
+                // Use static editing dialog for NG and TombEngine levels (bypass with Ctrl key for color only)
+                if (instance.CanBeColored() && (!_editor.Level.IsNG && !_editor.Level.IsTombEngine || Control.ModifierKeys.HasFlag(Keys.Control)))
                 {
                     EditColor(owner, (StaticInstance)instance);
                 }
-                else if (_editor.Level.IsNG)
+                else if (_editor.Level.IsNG || _editor.Level.IsTombEngine)
                 {
                     using (var formStaticMesh = GetObjectSetupWindow((StaticInstance)instance))
                         if (formStaticMesh.ShowDialog(owner) != DialogResult.OK)
