@@ -284,7 +284,7 @@ namespace TombEditor.ToolWindows
             var contextMenu = new DarkUI.Controls.DarkContextMenu();
 
             // Add "Clear Filter" option
-            var clearItem = new System.Windows.Forms.ToolStripMenuItem("Clear Filter");
+            var clearItem = new ToolStripMenuItem("Clear Filter");
             clearItem.Checked = _selectedCategories.Count == 0 && !_staticsOnlyFilter;
             clearItem.Click += (s, ev) =>
             {
@@ -295,7 +295,7 @@ namespace TombEditor.ToolWindows
             contextMenu.Items.Add(clearItem);
 
             // Add "Statics Only" option
-            var staticsOnlyItem = new System.Windows.Forms.ToolStripMenuItem("Statics Only");
+            var staticsOnlyItem = new ToolStripMenuItem("Statics Only");
             staticsOnlyItem.Checked = _staticsOnlyFilter;
             staticsOnlyItem.Click += (s, ev) =>
             {
@@ -307,12 +307,12 @@ namespace TombEditor.ToolWindows
             contextMenu.Items.Add(staticsOnlyItem);
 
             // Add separator
-            contextMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
+            contextMenu.Items.Add(new ToolStripSeparator());
 
             // Add category items
             foreach (var category in allCategories)
             {
-                var categoryItem = new System.Windows.Forms.ToolStripMenuItem(category);
+                var categoryItem = new ToolStripMenuItem(category);
                 categoryItem.Checked = _selectedCategories.Contains(category);
                 categoryItem.Click += (s, ev) =>
                 {
