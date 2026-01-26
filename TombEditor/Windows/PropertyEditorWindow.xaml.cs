@@ -591,8 +591,8 @@ namespace TombEditor.Windows
             {
                 case PropertyType.Integer:
                 case PropertyType.Float:
-                    if (control is TextBox tb)
-                        tb.Text = propDef.Default ?? "0";
+                    if (control is TextBox tbNumeric)
+                        tbNumeric.Text = propDef.Default ?? "0";
                     break;
 
                 case PropertyType.Boolean:
@@ -640,8 +640,8 @@ namespace TombEditor.Windows
                             {
                                 if (child is System.Windows.Shapes.Rectangle rect)
                                     rect.Fill = new SolidColorBrush(color);
-                                else if (child is TextBlock tb)
-                                    tb.Text = ColorToHex(color);
+                                else if (child is TextBlock tbColor)
+                                    tbColor.Text = ColorToHex(color);
                             }
                         }
                         
@@ -655,8 +655,8 @@ namespace TombEditor.Windows
                     break;
 
                 default:
-                    if (control is TextBox tb2)
-                        tb2.Text = propDef.Default ?? "";
+                    if (control is TextBox tbDefault)
+                        tbDefault.Text = propDef.Default ?? "";
                     break;
             }
         }

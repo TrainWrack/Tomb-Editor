@@ -14,6 +14,7 @@ namespace TombEditor.Forms.TombEngine
     {
         private readonly StaticInstance _staticMesh;
         private PropertyEditorWindow _wpfWindow;
+        private bool _wpfShown = false;
 
         public FormStatic(StaticInstance staticMesh)
         {
@@ -25,9 +26,6 @@ namespace TombEditor.Forms.TombEngine
 
             // Initialize property manager if not already done
             InitializePropertyManager();
-
-            // Show the WPF window
-            ShowWPFPropertyEditor();
         }
 
         private void InitializePropertyManager()
@@ -40,6 +38,17 @@ namespace TombEditor.Forms.TombEngine
             if (System.IO.Directory.Exists(propertiesPath))
             {
                 TombLib.LevelData.Properties.PropertyManager.Instance.SetPropertiesDirectory(propertiesPath);
+            }
+        }
+
+        protected override void OnShown(System.EventArgs e)
+        {
+            base.OnShown(e);
+
+            if (!_wpfShown)
+            {
+                _wpfShown = true;
+                ShowWPFPropertyEditor();
             }
         }
 
