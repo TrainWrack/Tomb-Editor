@@ -16,7 +16,7 @@ namespace TombEditor.Windows
     {
         private readonly ItemInstance _instance;
         private readonly List<PropertyDefinition> _propertyDefinitions;
-        private readonly Dictionary<string, Control> _propertyControls;
+        private readonly Dictionary<string, FrameworkElement> _propertyControls;
         private readonly bool _isTombEngine;
 
         public bool PropertiesChanged { get; private set; }
@@ -26,7 +26,7 @@ namespace TombEditor.Windows
             InitializeComponent();
             _instance = instance;
             _isTombEngine = isTombEngine;
-            _propertyControls = new Dictionary<string, Control>();
+            _propertyControls = new Dictionary<string, FrameworkElement>();
             PropertiesChanged = false;
 
             // Load property definitions based on instance type
@@ -89,7 +89,7 @@ namespace TombEditor.Windows
                 }
 
                 // Create control based on property type
-                Control control = CreateControlForProperty(propDef);
+                FrameworkElement control = CreateControlForProperty(propDef);
                 if (control != null)
                 {
                     stackPanel.Children.Add(control);
@@ -104,7 +104,7 @@ namespace TombEditor.Windows
         /// <summary>
         /// Creates the appropriate WPF control for a property
         /// </summary>
-        private Control CreateControlForProperty(PropertyDefinition propDef)
+        private FrameworkElement CreateControlForProperty(PropertyDefinition propDef)
         {
             // Get current value from instance
             object currentValue = GetPropertyValue(propDef.Name);
@@ -134,7 +134,7 @@ namespace TombEditor.Windows
             }
         }
 
-        private Control CreateIntegerControl(PropertyDefinition propDef, object currentValue)
+        private FrameworkElement CreateIntegerControl(PropertyDefinition propDef, object currentValue)
         {
             var textBox = new TextBox
             {
@@ -150,7 +150,7 @@ namespace TombEditor.Windows
             return textBox;
         }
 
-        private Control CreateFloatControl(PropertyDefinition propDef, object currentValue)
+        private FrameworkElement CreateFloatControl(PropertyDefinition propDef, object currentValue)
         {
             var textBox = new TextBox
             {
@@ -177,7 +177,7 @@ namespace TombEditor.Windows
             return textBox;
         }
 
-        private Control CreateBooleanControl(PropertyDefinition propDef, object currentValue)
+        private FrameworkElement CreateBooleanControl(PropertyDefinition propDef, object currentValue)
         {
             bool value = currentValue != null ? Convert.ToBoolean(currentValue) : 
                          bool.TryParse(propDef.Default, out bool defVal) ? defVal : false;
@@ -204,7 +204,7 @@ namespace TombEditor.Windows
             return stackPanel;
         }
 
-        private Control CreateDropdownControl(PropertyDefinition propDef, object currentValue)
+        private FrameworkElement CreateDropdownControl(PropertyDefinition propDef, object currentValue)
         {
             var comboBox = new ComboBox();
 
@@ -225,7 +225,7 @@ namespace TombEditor.Windows
             return comboBox;
         }
 
-        private Control CreateCheckboxListControl(PropertyDefinition propDef, object currentValue)
+        private FrameworkElement CreateCheckboxListControl(PropertyDefinition propDef, object currentValue)
         {
             var stackPanel = new StackPanel();
 
@@ -252,7 +252,7 @@ namespace TombEditor.Windows
             return stackPanel;
         }
 
-        private Control CreateColorControl(PropertyDefinition propDef, object currentValue)
+        private FrameworkElement CreateColorControl(PropertyDefinition propDef, object currentValue)
         {
             var mainPanel = new StackPanel();
 
@@ -480,7 +480,7 @@ namespace TombEditor.Windows
             return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
         }
 
-        private Control CreateTextControl(PropertyDefinition propDef, object currentValue)
+        private FrameworkElement CreateTextControl(PropertyDefinition propDef, object currentValue)
         {
             return new TextBox
             {
@@ -538,7 +538,7 @@ namespace TombEditor.Windows
         /// <summary>
         /// Extracts the value from a WPF control
         /// </summary>
-        private object ExtractValueFromControl(Control control, PropertyType type)
+        private object ExtractValueFromControl(FrameworkElement control, PropertyType type)
         {
             switch (type)
             {
@@ -656,7 +656,7 @@ namespace TombEditor.Windows
             }
         }
 
-        private void SetControlToDefault(Control control, PropertyDefinition propDef)
+        private void SetControlToDefault(FrameworkElement control, PropertyDefinition propDef)
         {
             switch (propDef.Type)
             {

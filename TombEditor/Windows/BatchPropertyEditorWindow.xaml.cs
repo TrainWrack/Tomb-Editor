@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using TombLib.LevelData;
 using TombLib.LevelData.Properties;
 
@@ -15,7 +16,7 @@ namespace TombEditor.Windows
     {
         private readonly List<ItemInstance> _instances;
         private readonly List<PropertyDefinition> _propertyDefinitions;
-        private readonly Dictionary<string, Control> _propertyControls;
+        private readonly Dictionary<string, FrameworkElement> _propertyControls;
         private readonly bool _isTombEngine;
 
         public bool PropertiesChanged { get; private set; }
@@ -33,7 +34,7 @@ namespace TombEditor.Windows
             InitializeComponent();
             _instances = instances;
             _isTombEngine = isTombEngine;
-            _propertyControls = new Dictionary<string, Control>();
+            _propertyControls = new Dictionary<string, FrameworkElement>();
             PropertiesChanged = false;
 
             // Load property definitions based on first instance type
@@ -108,7 +109,7 @@ namespace TombEditor.Windows
                 }
 
                 // Create control based on property type
-                Control control = CreateBatchControlForProperty(propDef);
+                FrameworkElement control = CreateBatchControlForProperty(propDef);
                 if (control != null)
                 {
                     stackPanel.Children.Add(control);
@@ -123,7 +124,7 @@ namespace TombEditor.Windows
         /// <summary>
         /// Creates controls for batch editing with placeholder text when values differ
         /// </summary>
-        private Control CreateBatchControlForProperty(PropertyDefinition propDef)
+        private FrameworkElement CreateBatchControlForProperty(PropertyDefinition propDef)
         {
             // Get values from all instances to determine if they're consistent
             var values = _instances.Select(inst => GetPropertyValue(inst, propDef.Name)).ToList();
@@ -214,7 +215,7 @@ namespace TombEditor.Windows
                         Height = 40,
                         Stroke = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(85, 85, 85)),
                         StrokeThickness = 1,
-                        Margin = new System.Windows.Media.Thickness(0, 0, 0, 10)
+                        Margin = new Thickness(0, 0, 0, 10)
                     };
 
                     if (valuesAreSame && commonValue != null)
@@ -250,13 +251,13 @@ namespace TombEditor.Windows
                     rgbPanel.Children.Add(bluePanel);
 
                     // Hex display
-                    var hexPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new System.Windows.Media.Thickness(0, 5, 0, 0) };
+                    var hexPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 0) };
                     var hexLabel = new TextBlock
                     {
                         Text = valuesAreSame ? "Hex: " : "Hex: <Mixed> → ",
                         Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(241, 241, 241)),
                         VerticalAlignment = VerticalAlignment.Center,
-                        Margin = new System.Windows.Media.Thickness(0, 0, 5, 0)
+                        Margin = new Thickness(0, 0, 5, 0)
                     };
                     var hexValue = new TextBlock
                     {
@@ -335,7 +336,7 @@ namespace TombEditor.Windows
             PropertiesChanged = true;
         }
 
-        private bool IsValueModified(Control control, PropertyType type)
+        private bool IsValueModified(FrameworkElement control, PropertyType type)
         {
             if (control is TextBox tb)
                 return !string.IsNullOrEmpty(tb.Text) && tb.Text != "<Mixed Values>" && tb.Text != "<Mixed>";
@@ -365,7 +366,7 @@ namespace TombEditor.Windows
         /// <summary>
         /// Extracts the value from a WPF control
         /// </summary>
-        private object ExtractValueFromControl(Control control, PropertyType type)
+        private object ExtractValueFromControl(FrameworkElement control, PropertyType type)
         {
             switch (type)
             {
@@ -626,7 +627,7 @@ namespace TombEditor.Windows
         /// </summary>
         private StackPanel CreateBatchColorSliderPanel(string label, byte initialValue, System.Windows.Media.Color accentColor, Action<byte> onValueChanged)
         {
-            var panel = new StackPanel { Margin = new System.Windows.Media.Thickness(0, 2, 0, 2) };
+            var panel = new StackPanel { Margin = new Thickness(0, 2, 0, 2) };
 
             // Header with label and value
             var headerPanel = new StackPanel { Orientation = Orientation.Horizontal };
@@ -658,7 +659,7 @@ namespace TombEditor.Windows
                 Value = initialValue,
                 TickFrequency = 1,
                 IsSnapToTickEnabled = true,
-                Margin = new System.Windows.Media.Thickness(0, 2, 0, 0),
+                Margin = new Thickness(0, 2, 0, 0),
                 Tag = "ColorSlider"
             };
 
