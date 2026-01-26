@@ -139,6 +139,14 @@
     <Content Include="TE.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Resources\Properties\**\*.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Windows\*.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="NLog" Version="5.0.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
   </ItemGroup>

@@ -89,8 +89,28 @@ namespace TombLib.LevelData.Properties
         /// </summary>
         public MoveablePropertySet GetMoveableProperties(string moveableName)
         {
+            // Try exact match first
             if (_moveableProperties.ContainsKey(moveableName))
                 return _moveableProperties[moveableName];
+
+            // Try to extract just the name part if the input has format like "(123) HORSEMAN" or "Uncertain game version - (123) HORSEMAN"
+            // This handles WadObjectId.ToString() output
+            string simpleName = moveableName;
+            
+            // Remove "Uncertain game version - " prefix if present
+            if (simpleName.Contains("Uncertain game version - "))
+                simpleName = simpleName.Replace("Uncertain game version - ", "");
+            
+            // Extract name after "(id) " pattern
+            int lastParenIndex = simpleName.LastIndexOf(')');
+            if (lastParenIndex >= 0 && lastParenIndex < simpleName.Length - 1)
+            {
+                simpleName = simpleName.Substring(lastParenIndex + 1).Trim();
+                
+                // Try lookup with simplified name
+                if (_moveableProperties.ContainsKey(simpleName))
+                    return _moveableProperties[simpleName];
+            }
 
             // Return default moveable properties (HP and OCB)
             return GetDefaultMoveableProperties();
