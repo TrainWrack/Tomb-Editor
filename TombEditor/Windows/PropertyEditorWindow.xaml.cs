@@ -10,6 +10,22 @@ using TombLib.LevelData.Properties;
 namespace TombEditor.Windows
 {
     /// <summary>
+    /// Context where PropertyEditorWindow is being used
+    /// </summary>
+    public enum PropertyEditorContext
+    {
+        /// <summary>
+        /// Editing properties in TombEditor - Reset button restores WAD2 values
+        /// </summary>
+        TombEditor,
+
+        /// <summary>
+        /// Editing properties in Wadtool - Reset button restores XML defaults
+        /// </summary>
+        Wadtool
+    }
+
+    /// <summary>
     /// WPF window for editing object properties dynamically (supports both single and batch editing)
     /// </summary>
     public partial class PropertyEditorWindow : Window
@@ -20,14 +36,16 @@ namespace TombEditor.Windows
         private readonly List<PropertyDefinition> _propertyDefinitions;
         private readonly Dictionary<string, FrameworkElement> _propertyControls;
         private readonly bool _isTombEngine;
+        private readonly PropertyEditorContext _context;
 
         public bool PropertiesChanged { get; private set; }
 
         // Constructor for single object editing
-        public PropertyEditorWindow(ItemInstance instance, bool isTombEngine)
+        public PropertyEditorWindow(ItemInstance instance, bool isTombEngine, PropertyEditorContext context = PropertyEditorContext.TombEditor)
         {
             InitializeComponent();
             _instance = instance;
+            _context = context;
             _instances = new List<ItemInstance> { instance };
             _isBatchMode = false;
             _isTombEngine = isTombEngine;
@@ -65,7 +83,7 @@ namespace TombEditor.Windows
         }
 
         // Constructor for batch editing multiple objects
-        public PropertyEditorWindow(List<ItemInstance> instances, bool isTombEngine)
+        public PropertyEditorWindow(List<ItemInstance> instances, bool isTombEngine, PropertyEditorContext context = PropertyEditorContext.TombEditor)
         {
             if (instances == null || instances.Count == 0)
                 throw new ArgumentException("No instances provided for batch editing");
@@ -80,6 +98,7 @@ namespace TombEditor.Windows
             _instances = instances;
             _isBatchMode = true;
             _isTombEngine = isTombEngine;
+            _context = context;
             _propertyControls = new Dictionary<string, FrameworkElement>();
             PropertiesChanged = false;
 
