@@ -41,7 +41,7 @@ namespace TombEditor.Windows
             else if (instance is StaticInstance staticMesh)
             {
                 TitleText.Text = "Static Properties";
-                SubtitleText.Text = $"Object: {staticMesh.WadObjectId}";
+                SubtitleText.Text = $"Object: {staticMesh.WadObjectId.ToString(TRVersion.Game.TombEngine)}";
                 
                 var propertySet = PropertyManager.Instance.GetStaticProperties();
                 _propertyDefinitions = propertySet.Properties;
