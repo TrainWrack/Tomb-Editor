@@ -36,6 +36,7 @@ namespace TombEditor.Forms
             new Palette(),
             new TexturePanel(),
             new ObjectList(),
+            new PropertyWindow(),
             new ToolPalette()
         };
 

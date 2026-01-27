@@ -1092,33 +1092,13 @@ namespace TombEditor
         public static void EditObject(ObjectInstance instance, IWin32Window owner)
         {
             // Handle batch editing for ObjectGroup containing moveables or statics
-            if (instance is ObjectGroup group && _editor.Level.IsTombEngine)
+            // For Tomb Engine levels, properties are edited in the docked PropertyWindow
+            // No need for dialog-based editing
+            if (_editor.Level.IsTombEngine && (instance is MoveableInstance || instance is StaticInstance))
             {
-                var moveables = group.OfType<MoveableInstance>().ToList();
-                var statics = group.OfType<StaticInstance>().ToList();
-                
-                if (moveables.Any() && !statics.Any())
-                {
-                    // Batch edit moveables
-                    var window = new TombEditor.Windows.BatchPropertyEditorWindow(moveables.Cast<ItemInstance>().ToList(), true);
-                    if (window.ShowDialog() == true)
-                    {
-                        foreach (var obj in moveables)
-                            _editor.ObjectChange(obj, ObjectChangeType.Change);
-                    }
-                    return;
-                }
-                else if (statics.Any() && !moveables.Any())
-                {
-                    // Batch edit statics
-                    var window = new TombEditor.Windows.BatchPropertyEditorWindow(statics.Cast<ItemInstance>().ToList(), true);
-                    if (window.ShowDialog() == true)
-                    {
-                        foreach (var obj in statics)
-                            _editor.ObjectChange(obj, ObjectChangeType.Change);
-                    }
-                    return;
-                }
+                // Just select the object - the PropertyWindow will show its properties automatically
+                _editor.SendMessage("Select an object to view and edit its properties in the Properties window.", PopupType.Info);
+                return;
             }
             
             if (instance is MoveableInstance)
