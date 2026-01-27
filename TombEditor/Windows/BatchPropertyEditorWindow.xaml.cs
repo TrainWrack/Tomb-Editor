@@ -43,7 +43,7 @@ namespace TombEditor.Windows
                 TitleText.Text = $"Batch Edit {instances.Count} Moveables";
                 SubtitleText.Text = "Changes will be applied to all selected moveables";
                 
-                var propertySet = PropertyManager.Instance.GetMoveableProperties(moveable.WadObjectId.ToString());
+                var propertySet = PropertyManager.Instance.GetMoveableProperties(moveable.WadObjectId.ToString(TRVersion.Game.TombEngine));
                 _propertyDefinitions = propertySet.Properties;
             }
             else if (instances[0] is StaticInstance)
