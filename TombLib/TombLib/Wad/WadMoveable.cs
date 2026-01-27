@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using TombLib.LevelData;
+using TombLib.LevelData.Properties;
 using TombLib.Utils;
 using TombLib.Wad.Catalog;
 
@@ -78,6 +79,7 @@ namespace TombLib.Wad
         public List<WadAnimation> Animations { get; } = new List<WadAnimation>();
         //public WadBone Skeleton { get; set; } = new WadBone();
         public List<WadBone> Bones { get; } = new List<WadBone>();
+        public PropertyCollection CustomProperties { get; set; } = new PropertyCollection();
 
         public WadMoveable(WadMoveableId id)
         {
@@ -98,6 +100,16 @@ namespace TombLib.Wad
                 mov.Bones.Add(bone.Clone());
             foreach (var animation in Animations)
                 mov.Animations.Add(animation.Clone());
+            
+            // Clone custom properties
+            if (CustomProperties != null)
+            {
+                foreach (var kvp in CustomProperties.GetAll())
+                {
+                    mov.CustomProperties.SetProperty(kvp.Key, kvp.Value);
+                }
+            }
+            
             return mov;
         }
 
