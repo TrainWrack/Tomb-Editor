@@ -37,6 +37,7 @@ namespace TombEditor.Windows
         private readonly Dictionary<string, FrameworkElement> _propertyControls;
         private readonly bool _isTombEngine;
         private readonly PropertyEditorContext _context;
+        private readonly PropertyCollection _savedWad2Properties; // Stores original WAD2 properties for TombEditor context
 
         public bool PropertiesChanged { get; private set; }
 
@@ -51,6 +52,16 @@ namespace TombEditor.Windows
             _isTombEngine = isTombEngine;
             _propertyControls = new Dictionary<string, FrameworkElement>();
             PropertiesChanged = false;
+
+            // In TombEditor context, save current CustomProperties for "Reset to Saved" functionality
+            if (_context == PropertyEditorContext.TombEditor)
+            {
+                _savedWad2Properties = new PropertyCollection();
+                foreach (var kvp in instance.CustomProperties.GetAll())
+                {
+                    _savedWad2Properties.SetProperty(kvp.Key, kvp.Value);
+                }
+            }
 
             // Load property definitions based on instance type
             if (instance is MoveableInstance moveable)
@@ -805,17 +816,68 @@ namespace TombEditor.Windows
         }
 
         /// <summary>
-        /// Resets all properties to their default values
+        /// Resets all properties based on context:
+        /// - Wadtool: Reset to XML defaults
+        /// - TombEditor: Reset to WAD2 saved values (or XML defaults if none)
         /// </summary>
         private void ResetToDefaults()
         {
-            foreach (var propDef in _propertyDefinitions)
+            if (_context == PropertyEditorContext.Wadtool)
             {
-                if (!_propertyControls.ContainsKey(propDef.Name))
-                    continue;
+                // Wadtool context: Reset to XML defaults
+                foreach (var propDef in _propertyDefinitions)
+                {
+                    if (!_propertyControls.ContainsKey(propDef.Name))
+                        continue;
 
-                var control = _propertyControls[propDef.Name];
-                SetControlToDefault(control, propDef);
+                    var control = _propertyControls[propDef.Name];
+                    SetControlToDefault(control, propDef);
+                }
+                
+                MessageBox.Show("Properties reset to XML defaults.", "Reset", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else // PropertyEditorContext.TombEditor
+            {
+                // TombEditor context: Try to restore WAD2 saved values
+                if (_savedWad2Properties != null && _savedWad2Properties.GetAll().Count > 0)
+                {
+                    // Restore from WAD2 saved values
+                    foreach (var propDef in _propertyDefinitions)
+                    {
+                        if (!_propertyControls.ContainsKey(propDef.Name))
+                            continue;
+
+                        var control = _propertyControls[propDef.Name];
+                        
+                        // Check if WAD2 had a value for this property
+                        var savedValue = _savedWad2Properties.GetProperty<string>(propDef.Name, null);
+                        if (savedValue != null)
+                        {
+                            SetControlToValue(control, propDef, savedValue);
+                        }
+                        else
+                        {
+                            // No WAD2 value, use XML default
+                            SetControlToDefault(control, propDef);
+                        }
+                    }
+                    
+                    MessageBox.Show("Properties reset to WAD2 saved values.", "Reset", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    // No WAD2 properties exist, use XML defaults
+                    foreach (var propDef in _propertyDefinitions)
+                    {
+                        if (!_propertyControls.ContainsKey(propDef.Name))
+                            continue;
+
+                        var control = _propertyControls[propDef.Name];
+                        SetControlToDefault(control, propDef);
+                    }
+                    
+                    MessageBox.Show("Properties reset to XML defaults (no WAD2 values exist).", "Reset", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
         }
 
@@ -887,6 +949,75 @@ namespace TombEditor.Windows
                 default:
                     if (control is TextBox tbDefault)
                         tbDefault.Text = propDef.Default ?? "";
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Sets a control to a specific saved value (used for WAD2 restore)
+        /// </summary>
+        private void SetControlToValue(FrameworkElement control, PropertyDefinition propDef, string value)
+        {
+            switch (propDef.Type)
+            {
+                case PropertyType.Integer:
+                case PropertyType.Float:
+                    if (control is TextBox tb)
+                        tb.Text = value;
+                    break;
+
+                case PropertyType.Boolean:
+                    if (control is CheckBox cb)
+                    {
+                        bool boolVal = bool.TryParse(value, out bool b) && b;
+                        cb.IsChecked = boolVal;
+                    }
+                    break;
+
+                case PropertyType.Dropdown:
+                    if (control is ComboBox combo && !string.IsNullOrEmpty(value))
+                    {
+                        if (combo.Items.Contains(value))
+                            combo.SelectedItem = value;
+                    }
+                    break;
+
+                case PropertyType.Checkbox:
+                    if (control is StackPanel sp)
+                    {
+                        var values = value?.Split(',').Select(s => s.Trim()).ToList() ?? new List<string>();
+                        foreach (var child in sp.Children)
+                        {
+                            if (child is CheckBox chk)
+                                chk.IsChecked = values.Contains(chk.Tag?.ToString() ?? chk.Content?.ToString() ?? "");
+                        }
+                    }
+                    break;
+
+                case PropertyType.Color:
+                    if (control is Button colorBtn)
+                    {
+                        var color = ParseColor(value);
+                        
+                        // Update button display
+                        if (colorBtn.Content is Grid btnGrid)
+                        {
+                            ((System.Windows.Shapes.Rectangle)btnGrid.Children[0]).Fill = new SolidColorBrush(color);
+                            ((TextBlock)btnGrid.Children[1]).Text = value;
+                        }
+                        
+                        // Update tag
+                        if (colorBtn.Tag != null)
+                        {
+                            dynamic tag = colorBtn.Tag;
+                            colorBtn.Tag = new { PropDef = tag.PropDef, CurrentColor = color };
+                        }
+                    }
+                    break;
+
+                default:
+                    if (control is TextBox tbDefault)
+                        tbDefault.Text = value;
                     break;
             }
         }

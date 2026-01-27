@@ -1210,7 +1210,7 @@ namespace TombEditor
                     return;
                 }
 
-                args.Editor.Action = new EditorActionPlace(false, (r, l) => ItemInstance.FromItemType(currentItem.Value));
+                args.Editor.Action = new EditorActionPlace(false, (level, room) => ItemInstance.FromItemType(level, currentItem.Value));
             });
 
             AddCommand("LocateItem", "Locate item", CommandType.Objects, delegate (CommandArgs args)

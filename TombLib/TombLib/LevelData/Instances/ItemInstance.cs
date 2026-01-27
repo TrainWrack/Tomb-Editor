@@ -41,6 +41,48 @@ namespace TombLib.LevelData
                 return new MoveableInstance() { WadObjectId = item.MoveableId };
         }
 
+        public static ItemInstance FromItemType(Level level, ItemType item)
+        {
+            ItemInstance instance;
+            
+            if (item.IsStatic)
+            {
+                instance = new StaticInstance() { WadObjectId = item.StaticId };
+                
+                // Copy CustomProperties from WAD2 file if they exist
+                if (level?.Settings != null)
+                {
+                    var wadStatic = level.Settings.WadTryGetStatic(item.StaticId);
+                    if (wadStatic?.CustomProperties != null)
+                    {
+                        foreach (var kvp in wadStatic.CustomProperties.GetAll())
+                        {
+                            instance.CustomProperties.SetProperty(kvp.Key, kvp.Value);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                instance = new MoveableInstance() { WadObjectId = item.MoveableId };
+                
+                // Copy CustomProperties from WAD2 file if they exist
+                if (level?.Settings != null)
+                {
+                    var wadMoveable = level.Settings.WadTryGetMoveable(item.MoveableId);
+                    if (wadMoveable?.CustomProperties != null)
+                    {
+                        foreach (var kvp in wadMoveable.CustomProperties.GetAll())
+                        {
+                            instance.CustomProperties.SetProperty(kvp.Key, kvp.Value);
+                        }
+                    }
+                }
+            }
+            
+            return instance;
+        }
+
         public string PrimaryAttribDesc => "Object ID";
         public string SecondaryAttribDesc => "OCB";
 
