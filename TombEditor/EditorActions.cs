@@ -1091,6 +1091,36 @@ namespace TombEditor
 
         public static void EditObject(ObjectInstance instance, IWin32Window owner)
         {
+            // Handle batch editing for ObjectGroup containing moveables or statics
+            if (instance is ObjectGroup group && _editor.Level.IsTombEngine)
+            {
+                var moveables = group.OfType<MoveableInstance>().ToList();
+                var statics = group.OfType<StaticInstance>().ToList();
+                
+                if (moveables.Any() && !statics.Any())
+                {
+                    // Batch edit moveables
+                    var window = new TombEditor.Windows.BatchPropertyEditorWindow(moveables, "Moveable");
+                    if (window.ShowDialog() == true)
+                    {
+                        foreach (var obj in moveables)
+                            _editor.ObjectChange(obj, ObjectChangeType.Change);
+                    }
+                    return;
+                }
+                else if (statics.Any() && !moveables.Any())
+                {
+                    // Batch edit statics
+                    var window = new TombEditor.Windows.BatchPropertyEditorWindow(statics, "Static");
+                    if (window.ShowDialog() == true)
+                    {
+                        foreach (var obj in statics)
+                            _editor.ObjectChange(obj, ObjectChangeType.Change);
+                    }
+                    return;
+                }
+            }
+            
             if (instance is MoveableInstance)
             {
                 if (instance.CanBeColored() && Control.ModifierKeys.HasFlag(Keys.Control))
@@ -1106,12 +1136,12 @@ namespace TombEditor
             }
             else if (instance is StaticInstance)
             {
-                // Use static editing dialog only for NG levels for now (bypass it if Ctrl/Alt key is pressed)
-                if (instance.CanBeColored() && (!_editor.Level.IsNG || Control.ModifierKeys.HasFlag(Keys.Control)))
+                // Use static editing dialog for NG and TombEngine levels (bypass it if Ctrl key is pressed)
+                if (instance.CanBeColored() && (!_editor.Level.IsNG && !_editor.Level.IsTombEngine) || Control.ModifierKeys.HasFlag(Keys.Control))
                 {
                     EditColor(owner, (StaticInstance)instance);
                 }
-                else if (_editor.Level.IsNG)
+                else if (_editor.Level.IsNG || _editor.Level.IsTombEngine)
                 {
                     using (var formStaticMesh = GetObjectSetupWindow((StaticInstance)instance))
                         if (formStaticMesh.ShowDialog(owner) != DialogResult.OK)
