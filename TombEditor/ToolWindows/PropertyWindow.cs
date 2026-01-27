@@ -1,6 +1,7 @@
 using DarkUI.Controls;
 using DarkUI.Docking;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
@@ -12,7 +13,7 @@ namespace TombEditor.ToolWindows
     public partial class PropertyWindow : DarkToolWindow
     {
         private readonly Editor _editor;
-        private ItemInstance _currentInstance;
+        private List<ItemInstance> _currentInstances;
 
         public PropertyWindow()
         {
@@ -52,15 +53,31 @@ namespace TombEditor.ToolWindows
             // Update when selection changes
             if (obj is Editor.SelectedObjectChangedEvent selectionEvent)
             {
-                UpdateProperties(selectionEvent.Current);
+                var selectedObject = selectionEvent.Current;
+                
+                // Check if it's an ObjectGroup (multiple selection)
+                if (selectedObject is ObjectGroup group)
+                {
+                    var items = group.OfType<ItemInstance>().ToList();
+                    UpdateProperties(items);
+                }
+                else if (selectedObject is ItemInstance item)
+                {
+                    UpdateProperties(new List<ItemInstance> { item });
+                }
+                else
+                {
+                    UpdateProperties(null);
+                }
             }
 
             // Update when object changes
             if (obj is Editor.ObjectChangedEvent objectEvent)
             {
-                if (objectEvent.Object == _currentInstance)
+                if (_currentInstances != null && _currentInstances.Contains(objectEvent.Object))
                 {
-                    UpdateProperties(_currentInstance);
+                    // Refresh the property grid without changing selection
+                    propertyGrid.Refresh();
                 }
             }
 
@@ -71,66 +88,122 @@ namespace TombEditor.ToolWindows
             }
         }
 
-        private void UpdateProperties(ObjectInstance selectedObject)
+        private void UpdateProperties(List<ItemInstance> instances)
         {
-            // Only handle ItemInstance objects (MoveableInstance or StaticInstance)
-            if (selectedObject is ItemInstance item && _editor.Level.IsTombEngine)
+            // Only handle ItemInstance objects for TombEngine
+            if (instances != null && instances.Any() && _editor.Level.IsTombEngine)
             {
-                _currentInstance = item;
+                _currentInstances = instances;
                 
-                // Create a custom object that wraps the instance with PropertyDescriptors
-                var wrapper = new ItemPropertiesWrapper(item);
+                // Create a custom object that wraps the instances with PropertyDescriptors
+                var wrapper = new ItemPropertiesWrapper(instances);
                 propertyGrid.SelectedObject = wrapper;
             }
             else
             {
-                _currentInstance = null;
+                _currentInstances = null;
                 propertyGrid.SelectedObject = null;
             }
         }
 
         private void propertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
-            if (_currentInstance != null)
+            if (_currentInstances != null && _currentInstances.Any())
             {
-                // Notify editor that object has changed
-                _editor.ObjectChange(_currentInstance, ObjectChangeType.Change);
+                // Notify editor that objects have changed
+                foreach (var instance in _currentInstances)
+                {
+                    _editor.ObjectChange(instance, ObjectChangeType.Change);
+                }
             }
         }
     }
 
     /// <summary>
     /// Wrapper class that provides PropertyDescriptor-based access to ItemInstance properties
+    /// Supports both single and multiple instance editing
     /// </summary>
     internal class ItemPropertiesWrapper : ICustomTypeDescriptor
     {
-        private readonly ItemInstance _instance;
+        private readonly List<ItemInstance> _instances;
         private readonly PropertyDescriptorCollection _properties;
+        private readonly bool _isSameType;
+        private readonly bool _isMoveable;
 
-        public ItemPropertiesWrapper(ItemInstance instance)
+        public ItemPropertiesWrapper(List<ItemInstance> instances)
         {
-            _instance = instance;
+            _instances = instances;
             
-            // Build property descriptors based on the instance type
-            var descriptors = new System.Collections.Generic.List<PropertyDescriptor>();
-
-            if (_instance is MoveableInstance moveable)
+            // Determine if all instances are of the same type
+            if (_instances.Count == 1)
             {
-                var propertySet = PropertyManager.Instance.GetMoveableProperties(
-                    moveable.WadObjectId.ToString(TRVersion.Game.TombEngine));
+                _isSameType = true;
+                _isMoveable = _instances[0] is MoveableInstance;
+            }
+            else
+            {
+                var firstType = _instances[0].GetType();
+                _isSameType = _instances.All(i => i.GetType() == firstType);
+                _isMoveable = _instances[0] is MoveableInstance;
                 
-                foreach (var propDef in propertySet.Properties)
+                // For same type moveables, also check if they have the same WadObjectId
+                if (_isSameType && _isMoveable)
                 {
-                    descriptors.Add(new CustomPropertyDescriptor(_instance, propDef));
+                    var firstId = (_instances[0] as MoveableInstance).WadObjectId;
+                    _isSameType = _instances.OfType<MoveableInstance>().All(m => m.WadObjectId == firstId);
+                }
+                // For same type statics (all statics share the same properties)
+                else if (_isSameType && !_isMoveable)
+                {
+                    _isSameType = true;
                 }
             }
-            else if (_instance is StaticInstance staticMesh)
+            
+            // Build property descriptors
+            var descriptors = new System.Collections.Generic.List<PropertyDescriptor>();
+
+            if (_isSameType)
             {
-                var propertySet = PropertyManager.Instance.GetStaticProperties();
-                
-                foreach (var propDef in propertySet.Properties)
+                // Show all properties for same type
+                if (_isMoveable)
                 {
-                    descriptors.Add(new CustomPropertyDescriptor(_instance, propDef));
+                    var moveable = _instances[0] as MoveableInstance;
+                    var propertySet = PropertyManager.Instance.GetMoveableProperties(
+                        moveable.WadObjectId.ToString(TRVersion.Game.TombEngine));
+                    
+                    foreach (var propDef in propertySet.Properties)
+                    {
+                        descriptors.Add(new CustomPropertyDescriptor(_instances, propDef));
+                    }
+                }
+                else
+                {
+                    var propertySet = PropertyManager.Instance.GetStaticProperties();
+                    
+                    foreach (var propDef in propertySet.Properties)
+                    {
+                        descriptors.Add(new CustomPropertyDescriptor(_instances, propDef));
+                    }
+                }
+            }
+            else
+            {
+                // Show only default properties for mixed types
+                if (_isMoveable)
+                {
+                    var defaultProps = PropertyManager.GetDefaultMoveableProperties();
+                    foreach (var propDef in defaultProps.Properties)
+                    {
+                        descriptors.Add(new CustomPropertyDescriptor(_instances, propDef));
+                    }
+                }
+                else
+                {
+                    var defaultProps = PropertyManager.GetDefaultStaticProperties();
+                    foreach (var propDef in defaultProps.Properties)
+                    {
+                        descriptors.Add(new CustomPropertyDescriptor(_instances, propDef));
+                    }
                 }
             }
 
@@ -138,8 +211,20 @@ namespace TombEditor.ToolWindows
         }
 
         public AttributeCollection GetAttributes() => AttributeCollection.Empty;
-        public string GetClassName() => _instance.GetType().Name;
-        public string GetComponentName() => _instance.ToString();
+        public string GetClassName()
+        {
+            if (_instances.Count == 1)
+                return _instances[0].GetType().Name;
+            else
+                return $"{_instances.Count} objects selected";
+        }
+        public string GetComponentName()
+        {
+            if (_instances.Count == 1)
+                return _instances[0].ToString();
+            else
+                return $"{_instances.Count} objects";
+        }
         public TypeConverter GetConverter() => null;
         public EventDescriptor GetDefaultEvent() => null;
         public PropertyDescriptor GetDefaultProperty() => null;
@@ -152,17 +237,18 @@ namespace TombEditor.ToolWindows
     }
 
     /// <summary>
-    /// Custom PropertyDescriptor that wraps a PropertyDefinition and provides access to the ItemInstance
+    /// Custom PropertyDescriptor that wraps a PropertyDefinition and provides access to ItemInstance(s)
+    /// Supports batch editing of multiple instances
     /// </summary>
     internal class CustomPropertyDescriptor : PropertyDescriptor
     {
-        private readonly ItemInstance _instance;
+        private readonly List<ItemInstance> _instances;
         private readonly PropertyDefinition _definition;
 
-        public CustomPropertyDescriptor(ItemInstance instance, PropertyDefinition definition)
+        public CustomPropertyDescriptor(List<ItemInstance> instances, PropertyDefinition definition)
             : base(definition.Name, GetAttributes(definition))
         {
-            _instance = instance;
+            _instances = instances;
             _definition = definition;
         }
 
@@ -178,6 +264,12 @@ namespace TombEditor.ToolWindows
             if (definition.Type == PropertyType.Dropdown && definition.Options != null && definition.Options.Count > 0)
             {
                 attrs.Add(new TypeConverterAttribute(typeof(DropdownConverter)));
+            }
+            
+            // Add UITypeEditor for checkbox (multiple selection)
+            if (definition.Type == PropertyType.Checkbox && definition.Options != null && definition.Options.Count > 0)
+            {
+                attrs.Add(new EditorAttribute(typeof(CheckboxEditor), typeof(System.Drawing.Design.UITypeEditor)));
             }
             
             // Add editor for color picker
@@ -204,7 +296,9 @@ namespace TombEditor.ToolWindows
                     case PropertyType.Boolean:
                         return typeof(bool);
                     case PropertyType.Dropdown:
+                        return typeof(string);
                     case PropertyType.Checkbox:
+                        // For multiple selections, we'll use a comma-separated string
                         return typeof(string);
                     case PropertyType.Color:
                         return typeof(System.Drawing.Color);
@@ -221,15 +315,17 @@ namespace TombEditor.ToolWindows
 
         public override object GetValue(object component)
         {
+            // Get value from first instance
+            var firstInstance = _instances[0];
+            
             // Special handling for OCB
             if (_definition.Name == "OCB")
             {
-                return (int)_instance.Ocb;
+                return (int)firstInstance.Ocb;
             }
 
             // Get from CustomProperties
-            var customProps = _instance is MoveableInstance m ? m.CustomProperties : 
-                             _instance is StaticInstance s ? s.CustomProperties : null;
+            var customProps = GetCustomProperties(firstInstance);
 
             if (customProps == null)
                 return GetDefaultValue();
@@ -255,27 +351,30 @@ namespace TombEditor.ToolWindows
 
         public override void SetValue(object component, object value)
         {
-            // Special handling for OCB
-            if (_definition.Name == "OCB")
+            // Apply value to all instances
+            foreach (var instance in _instances)
             {
-                _instance.Ocb = (short)(int)value;
-                return;
+                // Special handling for OCB
+                if (_definition.Name == "OCB")
+                {
+                    instance.Ocb = (short)(int)value;
+                    continue;
+                }
+
+                // Set in CustomProperties
+                var customProps = GetCustomProperties(instance);
+
+                if (customProps == null)
+                    continue;
+
+                // Convert color to hex string
+                if (_definition.Type == PropertyType.Color && value is System.Drawing.Color color)
+                {
+                    value = $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+                }
+
+                customProps.SetProperty(_definition.Name, value);
             }
-
-            // Set in CustomProperties
-            var customProps = _instance is MoveableInstance m ? m.CustomProperties : 
-                             _instance is StaticInstance s ? s.CustomProperties : null;
-
-            if (customProps == null)
-                return;
-
-            // Convert color to hex string
-            if (_definition.Type == PropertyType.Color && value is System.Drawing.Color color)
-            {
-                value = $"#{color.R:X2}{color.G:X2}{color.B:X2}";
-            }
-
-            customProps.SetProperty(_definition.Name, value);
         }
 
         public override void ResetValue(object component)
@@ -284,6 +383,13 @@ namespace TombEditor.ToolWindows
         }
 
         public override bool ShouldSerializeValue(object component) => false;
+
+        // Helper method to get CustomProperties from an instance
+        private PropertyCollection GetCustomProperties(ItemInstance instance)
+        {
+            return instance is MoveableInstance m ? m.CustomProperties : 
+                   instance is StaticInstance s ? s.CustomProperties : null;
+        }
 
         private object GetDefaultValue()
         {
@@ -352,6 +458,70 @@ namespace TombEditor.ToolWindows
                 }
             }
             return new StandardValuesCollection(new string[0]);
+        }
+    }
+
+    /// <summary>
+    /// UITypeEditor for checkbox list (multiple selection) properties
+    /// </summary>
+    internal class CheckboxEditor : System.Drawing.Design.UITypeEditor
+    {
+        public override System.Drawing.Design.UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
+        {
+            return System.Drawing.Design.UITypeEditorEditStyle.DropDown;
+        }
+
+        public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+        {
+            if (provider != null && context?.PropertyDescriptor is CustomPropertyDescriptor customDesc)
+            {
+                var editorService = provider.GetService(typeof(System.Windows.Forms.Design.IWindowsFormsEditorService)) 
+                    as System.Windows.Forms.Design.IWindowsFormsEditorService;
+
+                if (editorService != null)
+                {
+                    // Create a CheckedListBox with the options
+                    var listBox = new System.Windows.Forms.CheckedListBox();
+                    listBox.CheckOnClick = true;
+                    listBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
+
+                    var options = customDesc.PropertyDefinition.Options;
+                    if (options != null && options.Count > 0)
+                    {
+                        // Parse currently selected values
+                        var currentValues = (value as string ?? "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(v => v.Trim()).ToList();
+
+                        // Add options and check the selected ones
+                        foreach (var option in options)
+                        {
+                            int index = listBox.Items.Add(option);
+                            if (currentValues.Contains(option))
+                            {
+                                listBox.SetItemChecked(index, true);
+                            }
+                        }
+
+                        // Size the control
+                        listBox.Height = Math.Min(listBox.Items.Count * listBox.ItemHeight + 2, 200);
+
+                        // Show the dropdown
+                        editorService.DropDownControl(listBox);
+
+                        // Collect checked items
+                        var selected = new System.Collections.Generic.List<string>();
+                        foreach (int index in listBox.CheckedIndices)
+                        {
+                            selected.Add(listBox.Items[index].ToString());
+                        }
+
+                        // Return comma-separated list
+                        return string.Join(", ", selected);
+                    }
+                }
+            }
+
+            return value;
         }
     }
 }

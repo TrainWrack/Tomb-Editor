@@ -1092,13 +1092,15 @@ namespace TombEditor
         public static void EditObject(ObjectInstance instance, IWin32Window owner)
         {
             // Handle batch editing for ObjectGroup containing moveables or statics
-            // For Tomb Engine levels, properties are edited in the docked PropertyWindow
-            // No need for dialog-based editing
-            if (_editor.Level.IsTombEngine && (instance is MoveableInstance || instance is StaticInstance))
+            // For Tomb Engine levels with ItemInstances, properties are edited in the docked PropertyWindow
+            // Just select the objects and the PropertyWindow will show properties automatically
+            if (_editor.Level.IsTombEngine)
             {
-                // Just select the object - the PropertyWindow will show its properties automatically
-                _editor.SendMessage("Select an object to view and edit its properties in the Properties window.", PopupType.Info);
-                return;
+                if (instance is ItemInstance || (instance is ObjectGroup group && group.OfType<ItemInstance>().Any()))
+                {
+                    // Properties shown in PropertyWindow - nothing to do here
+                    return;
+                }
             }
             
             if (instance is MoveableInstance)
