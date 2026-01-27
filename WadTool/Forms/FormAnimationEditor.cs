@@ -15,6 +15,7 @@ using TombLib.Forms;
 using TombLib.GeometryIO;
 using TombLib.Graphics;
 using TombLib.LevelData;
+using TombLib.Types;
 using TombLib.Utils;
 using TombLib.Wad;
 using TombLib.Wad.Catalog;
@@ -92,6 +93,10 @@ namespace WadTool
             bool isTEN = _editor.Wad.GameVersion == TRVersion.Game.TombEngine;
             if (!isTEN && _editor.Tool.Configuration.AnimationEditor_SoundPreviewType > SoundPreviewType.Water)
                 _editor.Tool.Configuration.AnimationEditor_SoundPreviewType = SoundPreviewType.Land;
+
+            // Lock TEN-specific controls
+            sectionBlending.Visible = isTEN;
+            panelRootMotion.Visible = isTEN;
 
             // Update UI
             UpdateUIControls();
@@ -263,6 +268,8 @@ namespace WadTool
             drawGizmoToolStripMenuItem.Checked = _editor.Tool.Configuration.AnimationEditor_ShowGizmo;
             drawGridToolStripMenuItem.Checked = _editor.Tool.Configuration.AnimationEditor_ShowGrid;
             drawCollisionBoxToolStripMenuItem.Checked = _editor.Tool.Configuration.AnimationEditor_ShowCollisionBox;
+            drawSkinToolStripMenuItem.Checked = _editor.Tool.Configuration.AnimationEditor_ShowSkin;
+            drawSkinToolStripMenuItem.Visible = _editor.Tool.DestinationWad.GameVersion == TRVersion.Game.TombEngine;
 
             if (_editor.Tool.Configuration.AnimationEditor_ChainPlayback)
                 butTransportChained.Image = Properties.Resources.transport_chain_enabled_24;
@@ -458,10 +465,10 @@ namespace WadTool
             // Try to restore selection, if failed, select first visible one
             if (_editor.Moveable.Animations.Count > 0)
             {
-                if (_editor.CurrentAnim == null || 
+                if (_editor.CurrentAnim == null ||
                     (lstAnimations.Items.Count > 0 && UpdateAnimListSelection(_editor.CurrentAnim.Index) < 0))
                 {
-                    lstAnimations.SelectItem(0); 
+                    lstAnimations.SelectItem(0);
                     lstAnimations.EnsureVisible();
                 }
             }
@@ -492,6 +499,9 @@ namespace WadTool
                     nudEndVertVel.Value = (decimal)node.WadAnimation.EndVelocity;
                     nudStartHorVel.Value = (decimal)node.WadAnimation.StartLateralVelocity;
                     nudEndHorVel.Value = (decimal)node.WadAnimation.EndLateralVelocity;
+                    nudBlendFrameCount.Value = (decimal)node.WadAnimation.BlendFrameCount;
+                    bezierCurveEditor.Value = node.WadAnimation.BlendCurve;
+                    cbBlendPreset.SelectedIndex = -1;
 
                     tbStateId.Text = node.WadAnimation.StateId.ToString();
                     UpdateStateChange();
@@ -1265,6 +1275,9 @@ namespace WadTool
                 case nameof(nudBBoxMaxZ):
                     oldValue = bb.Maximum.Z;
                     break;
+                case nameof(nudBlendFrameCount):
+                    oldValue = _editor.CurrentAnim.WadAnimation.BlendFrameCount;
+                    break;
             }
 
             // Clamp if necessary
@@ -1297,7 +1310,7 @@ namespace WadTool
                     _editor.CurrentAnim.WadAnimation.NextFrame = (ushort)result;
                     break;
                 case nameof(nudFramerate):
-                    nudEndFrame.Value = (decimal)Math.Round(_editor.CurrentAnim.WadAnimation.EndFrame  / 
+                    nudEndFrame.Value = (decimal)Math.Round(_editor.CurrentAnim.WadAnimation.EndFrame /
                                                            (_editor.CurrentAnim.WadAnimation.FrameRate / (float)result));
                     _editor.CurrentAnim.WadAnimation.FrameRate = (byte)result;
                     break;
@@ -1315,6 +1328,9 @@ namespace WadTool
                     break;
                 case nameof(nudEndHorVel):
                     _editor.CurrentAnim.WadAnimation.EndLateralVelocity = result;
+                    break;
+                case nameof(nudBlendFrameCount):
+                    _editor.CurrentAnim.WadAnimation.BlendFrameCount = (ushort)result;
                     break;
                 case nameof(nudBBoxMinX):
                     EditBoundingBox(new Vector3(result, bb.Minimum.Y, bb.Minimum.Z), bb.Maximum);
@@ -1666,14 +1682,14 @@ namespace WadTool
         private void FixAnimations(int mode)
         {
             var anims = new List<AnimationNode>();
-            
+
             switch (mode)
             {
                 case 0: anims.Add(_editor.CurrentAnim); break;
                 case 1: anims.AddRange(lstAnimations.SelectedItems.Select(i => (AnimationNode)i.Tag)); break;
                 case 2: anims.AddRange(_editor.Animations); break;
             }
-            
+
             using (var form = new FormAnimationFixer(_editor, anims))
             {
                 var result = form.ShowDialog();
@@ -1739,7 +1755,7 @@ namespace WadTool
 
             _editor.CheckAnimationIntegrity(animation);
             _editor.Tool.UndoManager.PushAnimationChanged(_editor, _editor.CurrentAnim);
-            
+
             if (containsMetadata)
             {
                 _editor.CurrentAnim.WadAnimation = animation;
@@ -2057,7 +2073,7 @@ namespace WadTool
                 }
                 else if (ac.Type == WadAnimCommandType.FlipEffect &&
                          previewSoundType == SoundPreviewType.LandWithMaterial &&
-                         _editor.Wad.GameVersion >= TRVersion.Game.TR3)
+                         _editor.Wad.GameVersion.Native() >= TRVersion.Game.TR3)
                 {
                     var flipID = ac.Parameter2;
                     if (flipID == 32 || flipID == 33)
@@ -2112,6 +2128,12 @@ namespace WadTool
         private void drawGizmoToolStripMenuItem_Click(object sender, EventArgs e)
         {
             _editor.Tool.Configuration.AnimationEditor_ShowGizmo = !_editor.Tool.Configuration.AnimationEditor_ShowGizmo;
+            panelRendering.Invalidate();
+        }
+
+        private void drawSkinToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            _editor.Tool.Configuration.AnimationEditor_ShowSkin = !_editor.Tool.Configuration.AnimationEditor_ShowSkin;
             panelRendering.Invalidate();
         }
 
@@ -2222,6 +2244,7 @@ namespace WadTool
         private void nudEndVertVel_ValueChanged(object sender, EventArgs e) => UpdateAnimationParameter(nudEndVertVel);
         private void nudStartHorVel_ValueChanged(object sender, EventArgs e) => UpdateAnimationParameter(nudStartHorVel);
         private void nudEndHorVel_ValueChanged(object sender, EventArgs e) => UpdateAnimationParameter(nudEndHorVel);
+        private void nudBlendFrameCount_ValueChanged(object sender, EventArgs e) => UpdateAnimationParameter(nudBlendFrameCount);
 
         private void tbStateId_Validated(object sender, EventArgs e) => UpdateStateChange();
         private void animParameter_Validated(object sender, EventArgs e) => ValidateAnimationParameter();
@@ -2280,11 +2303,17 @@ namespace WadTool
                     InFrame = (ushort)timeline.SelectionStartFrameIndex,
                     OutFrame = (ushort)timeline.SelectionEndFrameIndex,
                     NextAnimation = 0,
-                    NextFrame = 0
+                    NextFrameLow = 0
                 });
             }
 
             EditStateChanges(sch);
+        }
+
+        private void bezierCurveEditor_ValueChanged(object sender, EventArgs e)
+        {
+            cbBlendPreset.SelectedIndex = -1;
+            Saved = false;
         }
 
         private void timerPlayAnimation_Tick(object sender, EventArgs e)
@@ -2805,6 +2834,35 @@ namespace WadTool
 
             _editor.Tool.Configuration.AnimationEditor_SoundPreviewType = previewType;
             UpdateUIControls();
+        }
+
+        private void cbRootPosX_CheckedChanged(object sender, EventArgs e)
+        {
+            // TODO: Where to put these flags?
+        }
+
+        private void cbBlendPreset_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            switch (cbBlendPreset.SelectedIndex)
+            {
+                case 0:
+                    bezierCurveEditor.Value.Set(BezierCurve2.Linear);
+                    break;
+
+                case 1:
+                    bezierCurveEditor.Value.Set(BezierCurve2.EaseIn);
+                    break;
+
+                case 2:
+                    bezierCurveEditor.Value.Set(BezierCurve2.EaseOut);
+                    break;
+
+                case 3:
+                    bezierCurveEditor.Value.Set(BezierCurve2.EaseInOut);
+                    break;
+            }
+
+            bezierCurveEditor.UpdateUI();
         }
     }
 }

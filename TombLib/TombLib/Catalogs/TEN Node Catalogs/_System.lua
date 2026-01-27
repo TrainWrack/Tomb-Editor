@@ -43,6 +43,16 @@ LevelFuncs.Engine.Node.GenerateString = function(textOrKey, x, y, scale, alignme
 	return TEN.Strings.DisplayString(textOrKey, TEN.Vec2(rX, rY), scale, color, TEN.Flow.IsStringPresent(textOrKey), options)
 end
 
+-- Helper function for easy generation text option for display string.
+LevelFuncs.Engine.Node.GeneratesTextOption = function (alignment, effects)
+	local options = {}
+	if (effects == 1 or effects == 3) then table.insert(options, TEN.Strings.DisplayStringOption.SHADOW) end
+	if (effects == 2 or effects == 3) then table.insert(options, TEN.Strings.DisplayStringOption.BLINK) end
+	if (alignment == 1) then table.insert(options, TEN.Strings.DisplayStringOption.CENTER) end
+	if (alignment == 2) then table.insert(options, TEN.Strings.DisplayStringOption.RIGHT) end
+	return options
+end
+
 -- Helper function to split string using specified delimiter.
 LevelFuncs.Engine.Node.SplitString = function(inputStr, delimiter)
 	if inputStr == nil then
@@ -188,3 +198,14 @@ LevelFuncs.Engine.Node.SetPostProcessMode = function(index)
 	}
 	return postProcessMode[index]
 end
+
+LevelFuncs.Engine.Node.SetInteractionHighlightType = function(index)
+	local interactionIconType =
+	{
+		[0] = TEN.Objects.InteractionType.PICKUP,
+		[1] = TEN.Objects.InteractionType.TALK,
+		[2] = TEN.Objects.InteractionType.USE,
+	}	
+	return interactionIconType[index]
+end
+		

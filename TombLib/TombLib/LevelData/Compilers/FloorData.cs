@@ -375,10 +375,12 @@ namespace TombLib.LevelData.Compilers
             int lastFloorDataFunction = -1;
 
             // Floor collision
-            BuildFloorDataCollision(floorShape, ceilingShape.Max, false, outFloorData, ref lastFloorDataFunction, room, pos);
+            BuildFloorDataCollision(floorShape, ceilingShape.Max, false, outFloorData, ref lastFloorDataFunction,
+                room, pos, _level.Settings.GameVersion.Native());
 
             // Ceiling collision
-            BuildFloorDataCollision(ceilingShape, floorShape.Min, true, outFloorData, ref lastFloorDataFunction, room, pos);
+            BuildFloorDataCollision(ceilingShape, floorShape.Min, true, outFloorData, ref lastFloorDataFunction,
+                room, pos, _level.Settings.GameVersion.Native());
 
             // If sector is Death
             if (sector.HasFlag(SectorFlags.DeathFire))
@@ -388,7 +390,7 @@ namespace TombLib.LevelData.Compilers
             }
 
             // If sector is Climbable
-            if (_level.Settings.GameVersion >= TRVersion.Game.TR2 &&
+            if (_level.Settings.GameVersion.Native() >= TRVersion.Game.TR2 &&
                 (sector.Flags & SectorFlags.ClimbAny) != SectorFlags.None)
             {
                 ushort climb = 0x06;
@@ -406,7 +408,7 @@ namespace TombLib.LevelData.Compilers
             }
 
             // If sector is Monkey
-            if (_level.Settings.GameVersion >= TRVersion.Game.TR3 &&
+            if (_level.Settings.GameVersion.Native() >= TRVersion.Game.TR3 &&
                 (sector.Flags & SectorFlags.Monkey) != SectorFlags.None)
             {
                 lastFloorDataFunction = outFloorData.Count;
@@ -414,7 +416,7 @@ namespace TombLib.LevelData.Compilers
             }
 
             // If sector is Trigger triggerer
-            if (_level.Settings.GameVersion >= TRVersion.Game.TR3 &&
+            if (_level.Settings.GameVersion.Native() >= TRVersion.Game.TR3 &&
                 (sector.Flags & SectorFlags.TriggerTriggerer) != SectorFlags.None)
             {
                 lastFloorDataFunction = outFloorData.Count;
@@ -422,7 +424,7 @@ namespace TombLib.LevelData.Compilers
             }
 
             // If sector is Beetle
-            if (_level.Settings.GameVersion >= TRVersion.Game.TR3 &&
+            if (_level.Settings.GameVersion.Native() >= TRVersion.Game.TR3 &&
                 (sector.Flags & SectorFlags.Beetle) != SectorFlags.None) {
                 lastFloorDataFunction = outFloorData.Count;
                 outFloorData.Add(0x15);
@@ -529,8 +531,11 @@ namespace TombLib.LevelData.Compilers
 
                 if (_level.IsNG)
                 {
+                    bool isNGFlipEffectRange = setupTrigger.Target is TriggerParameterUshort { Key: > 46 }; // 46 is the last original tomb4 flip effect
+                    bool isPluginTrigger = setupTrigger.Plugin is TriggerParameterUshort { Key: > 0 }; // 0 is Tomb_NextGeneration
+
                     // NG flipeffects store timer and extra in additional ushort
-                    if (setupTrigger.TargetType == TriggerTargetType.FlipEffect && (setupTrigger.Target as TriggerParameterUshort)?.Key > 46)
+                    if (setupTrigger.TargetType == TriggerTargetType.FlipEffect && (isNGFlipEffectRange || isPluginTrigger))
                         triggerSetup = 0;
                     // NG condition trigger uses timer in low byte and extra stored as bits in the high byte
                     else if (setupTrigger.TriggerType == TriggerType.ConditionNg)
@@ -933,9 +938,10 @@ namespace TombLib.LevelData.Compilers
             return (ushort)Value;
         }
 
-        private void BuildFloorDataCollision(RoomSectorShape shape, int oppositeExtreme, bool isCeiling, List<ushort> outFloorData, ref int lastFloorDataFunction, Room reportRoom, VectorInt2 reportPos)
+        private void BuildFloorDataCollision(RoomSectorShape shape, int oppositeExtreme, bool isCeiling, List<ushort> outFloorData, ref int lastFloorDataFunction,
+            Room reportRoom, VectorInt2 reportPos, TRVersion.Game game)
         {
-            if (shape.IsSplit && _level.Settings.GameVersion >= TRVersion.Game.TR3)
+            if (shape.IsSplit && game.SupportsSplits())
             { // Build a triangulated slope
                 int bisectingIndex = shape.SplitDirectionIsXEqualsZ ? 1 : 0;
                 int portalIndex;

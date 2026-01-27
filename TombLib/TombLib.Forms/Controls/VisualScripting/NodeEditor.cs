@@ -61,6 +61,10 @@ namespace TombLib.Controls.VisualScripting
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool LockNodeChanges { get; set; } = false;
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Resizing { get; private set; } = false;
 
         // Loaded lists of action and condition functions.
@@ -121,6 +125,10 @@ namespace TombLib.Controls.VisualScripting
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IReadOnlyList<string> CachedSoundTracks { get { return _cachedSoundTracks; } }
         private List<string> _cachedSoundTracks = new List<string>();
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public IReadOnlyList<string> CachedVideos { get { return _cachedVideos; } }
+        private List<string> _cachedVideos = new List<string>();
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IReadOnlyList<string> CachedWadSlots { get { return _cachedWadSlots; } }
@@ -242,6 +250,7 @@ namespace TombLib.Controls.VisualScripting
             _cachedWadSlots         = level.Settings.WadGetAllMoveables().Select(m => TrCatalog.GetMoveableName(level.Settings.GameVersion, m.Key.TypeId)).ToList();
             _cachedSpriteSlots      = level.Settings.WadGetAllSpriteSequences().Select(m => TrCatalog.GetSpriteSequenceName(level.Settings.GameVersion, m.Key.TypeId)).ToList();
             _cachedSoundTracks      = level.Settings.GetListOfSoundtracks();
+            _cachedVideos           = level.Settings.GetListOfVideos();
             _cachedSoundInfos       = level.Settings.GlobalSoundMap;
             _cachedRooms            = level.ExistingRooms;
             _cachedVolumeEventSets  = level.Settings.VolumeEventSets.Select(s => s.Name).ToList();
@@ -1103,8 +1112,14 @@ namespace TombLib.Controls.VisualScripting
 
                 // Update colors
                 foreach (var n in nodeList)
+                {
+                    LockNodeChanges = true;
+
                     if (n.BackColor != n.Node.Color.ToWinFormsColor())
                         n.BackColor = n.Node.Color.ToWinFormsColor();
+
+                    LockNodeChanges = false;
+                }
 
                 // Draw node links antialiased
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
