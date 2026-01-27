@@ -3,81 +3,33 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:darkUI="clr-namespace:DarkUI.WPF;assembly=DarkUI.WPF"
+        xmlns:controls="clr-namespace:DarkUI.WPF.CustomControls;assembly=DarkUI.WPF"
         mc:Ignorable="d"
         Title="Property Editor" 
         Height="600" Width="500"
         WindowStartupLocation="CenterOwner"
-        Background="#2D2D30"
+        Background="{DynamicResource Brush_Background}"
+        Style="{DynamicResource CustomWindowStyle}"
         ResizeMode="CanResizeWithGrip"
         ShowInTaskbar="False">
     <Window.Resources>
-        <Style TargetType="Label">
-            <Setter Property="Foreground" Value="#F1F1F1"/>
-            <Setter Property="Margin" Value="0,5,0,0"/>
-        </Style>
-        <Style TargetType="TextBox">
-            <Setter Property="Background" Value="#3E3E42"/>
-            <Setter Property="Foreground" Value="#F1F1F1"/>
-            <Setter Property="BorderBrush" Value="#555555"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="4"/>
-            <Setter Property="Margin" Value="0,2,0,2"/>
-        </Style>
-        <Style TargetType="ComboBox">
-            <Setter Property="Background" Value="#3E3E42"/>
-            <Setter Property="Foreground" Value="#F1F1F1"/>
-            <Setter Property="BorderBrush" Value="#555555"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Margin" Value="0,2,0,2"/>
-        </Style>
-        <Style TargetType="ComboBoxItem">
-            <Setter Property="Background" Value="#2D2D30"/>
-            <Setter Property="Foreground" Value="#F1F1F1"/>
-            <Setter Property="Padding" Value="5,3"/>
-            <Style.Triggers>
-                <Trigger Property="IsHighlighted" Value="True">
-                    <Setter Property="Background" Value="#3E3E42"/>
-                    <Setter Property="Foreground" Value="#F1F1F1"/>
-                </Trigger>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#007ACC"/>
-                    <Setter Property="Foreground" Value="#FFFFFF"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-        <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="#F1F1F1"/>
-            <Setter Property="Margin" Value="0,2,0,2"/>
-        </Style>
-        <Style TargetType="RadioButton">
-            <Setter Property="Foreground" Value="#F1F1F1"/>
-            <Setter Property="Margin" Value="5,0,10,0"/>
-        </Style>
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="#3E3E42"/>
-            <Setter Property="Foreground" Value="#F1F1F1"/>
-            <Setter Property="BorderBrush" Value="#555555"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,5"/>
-            <Setter Property="Margin" Value="5"/>
-            <Setter Property="MinWidth" Value="80"/>
-        </Style>
         <!-- Style for property name labels -->
         <Style x:Key="PropertyNameLabel" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#F1F1F1"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush_Foreground}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,0,10,0"/>
             <Setter Property="FontSize" Value="12"/>
         </Style>
         <!-- Style for property rows -->
         <Style x:Key="PropertyRowBorder" TargetType="Border">
-            <Setter Property="BorderBrush" Value="#3E3E42"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush_Border_Low}"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="Padding" Value="5"/>
         </Style>
     </Window.Resources>
 
-    <Grid>
+    <Grid Margin="{x:Static darkUI:Defaults.MediumThickness}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -85,46 +37,53 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="#252526" Padding="10">
-            <StackPanel>
-                <TextBlock x:Name="TitleText" 
-                          Text="Object Properties" 
-                          Foreground="#F1F1F1" 
-                          FontSize="14" 
-                          FontWeight="Bold"/>
-                <TextBlock x:Name="SubtitleText" 
-                          Text="Configure object settings" 
-                          Foreground="#AAAAAA" 
-                          FontSize="11" 
-                          Margin="0,2,0,0"/>
-            </StackPanel>
-        </Border>
+        <StackPanel Margin="0,0,0,10">
+            <TextBlock x:Name="TitleText" 
+                      Text="Object Properties" 
+                      Foreground="{DynamicResource Brush_Foreground}" 
+                      FontSize="14" 
+                      FontWeight="Bold"/>
+            <TextBlock x:Name="SubtitleText" 
+                      Text="Configure object settings" 
+                      Foreground="{DynamicResource Brush_Foreground_Weak}" 
+                      FontSize="11" 
+                      Margin="0,2,0,0"/>
+        </StackPanel>
 
         <!-- Properties Grid -->
-        <ScrollViewer Grid.Row="1" 
-                     VerticalScrollBarVisibility="Auto"
-                     Margin="0">
-            <StackPanel x:Name="PropertiesPanel">
-                <!-- Dynamic property grid rows will be added here -->
-            </StackPanel>
-        </ScrollViewer>
+        <Border Grid.Row="1" 
+                BorderBrush="{DynamicResource Brush_Border_Low}" 
+                BorderThickness="{x:Static darkUI:Defaults.BorderThickness}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel x:Name="PropertiesPanel" Margin="{x:Static darkUI:Defaults.SmallThickness}">
+                    <!-- Dynamic property grid rows will be added here -->
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
 
         <!-- Buttons -->
-        <Border Grid.Row="2" Background="#252526" Padding="10">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button x:Name="ResetButton" 
-                       Content="Reset to Default" 
-                       Click="ResetButton_Click"
-                       Width="120"/>
-                <Button x:Name="OKButton" 
-                       Content="OK" 
-                       Click="OKButton_Click"
-                       IsDefault="True"/>
-                <Button x:Name="CancelButton" 
-                       Content="Cancel" 
-                       Click="CancelButton_Click"
-                       IsCancel="True"/>
-            </StackPanel>
-        </Border>
+        <controls:SpacedStack Grid.Row="2"
+                              HorizontalAlignment="Right"
+                              Orientation="Horizontal"
+                              Spacing="{x:Static darkUI:Defaults.MediumThicknessWidth}">
+            <StackPanel.Margin>
+                <Thickness Top="{x:Static darkUI:Defaults.MediumThicknessWidth}" />
+            </StackPanel.Margin>
+            
+            <Button x:Name="ResetButton" 
+                   Content="Reset to Default" 
+                   Click="ResetButton_Click"
+                   Width="120"/>
+            <Button x:Name="OKButton" 
+                   Content="OK" 
+                   Click="OKButton_Click"
+                   Width="80"
+                   IsDefault="True"/>
+            <Button x:Name="CancelButton" 
+                   Content="Cancel" 
+                   Click="CancelButton_Click"
+                   Width="80"
+                   IsCancel="True"/>
+        </controls:SpacedStack>
     </Grid>
 </Window>

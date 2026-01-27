@@ -3,39 +3,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:darkUI="clr-namespace:DarkUI.WPF;assembly=DarkUI.WPF"
+        xmlns:controls="clr-namespace:DarkUI.WPF.CustomControls;assembly=DarkUI.WPF"
         mc:Ignorable="d"
         Title="Color Picker" 
-        Height="400" Width="400"
+        Height="380" Width="420"
         WindowStartupLocation="CenterOwner"
-        Background="#2D2D30"
+        Background="{DynamicResource Brush_Background}"
+        Style="{DynamicResource CustomWindowStyle}"
         ResizeMode="NoResize"
         ShowInTaskbar="False">
-    <Window.Resources>
-        <Style TargetType="Label">
-            <Setter Property="Foreground" Value="#F1F1F1"/>
-            <Setter Property="Margin" Value="0,0,5,0"/>
-        </Style>
-        <Style TargetType="TextBox">
-            <Setter Property="Background" Value="#3E3E42"/>
-            <Setter Property="Foreground" Value="#F1F1F1"/>
-            <Setter Property="BorderBrush" Value="#555555"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="4"/>
-            <Setter Property="Margin" Value="5,0,0,0"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-        </Style>
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="#3E3E42"/>
-            <Setter Property="Foreground" Value="#F1F1F1"/>
-            <Setter Property="BorderBrush" Value="#555555"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,5"/>
-            <Setter Property="Margin" Value="5"/>
-            <Setter Property="MinWidth" Value="80"/>
-        </Style>
-    </Window.Resources>
-
-    <Grid Margin="15">
+    
+    <Grid Margin="{x:Static darkUI:Defaults.MediumThickness}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -45,93 +24,105 @@
 
         <!-- Color Preview -->
         <Border Grid.Row="0" 
-                Background="#252526" 
-                BorderBrush="#555555" 
-                BorderThickness="1"
-                Height="80"
-                Margin="0,0,0,15">
+                Background="{DynamicResource Brush_Panel}" 
+                BorderBrush="{DynamicResource Brush_Border_Low}" 
+                BorderThickness="{x:Static darkUI:Defaults.BorderThickness}"
+                Height="80">
+            <Border.Margin>
+                <Thickness Bottom="{x:Static darkUI:Defaults.MediumThicknessWidth}"/>
+            </Border.Margin>
             <Rectangle x:Name="ColorPreview" 
                       Fill="White"
-                      Margin="5"/>
+                      Margin="{x:Static darkUI:Defaults.SmallThickness}"/>
         </Border>
 
         <!-- RGB Sliders and Inputs -->
-        <StackPanel Grid.Row="1">
-            <!-- Red -->
-            <Grid Margin="0,0,0,10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="40"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="60"/>
-                </Grid.ColumnDefinitions>
-                <Label Grid.Column="0" Content="Red:" VerticalAlignment="Center"/>
-                <Slider x:Name="RedSlider" 
-                       Grid.Column="1" 
-                       Minimum="0" 
-                       Maximum="255" 
-                       Value="255"
-                       TickFrequency="1"
-                       IsSnapToTickEnabled="True"
-                       ValueChanged="RgbSlider_ValueChanged"
-                       VerticalAlignment="Center"/>
-                <TextBox x:Name="RedTextBox" 
-                        Grid.Column="2" 
-                        Text="255"
-                        TextChanged="RgbTextBox_TextChanged"
-                        Width="50"/>
-            </Grid>
+        <Border Grid.Row="1" 
+                BorderBrush="{DynamicResource Brush_Border_Low}" 
+                BorderThickness="{x:Static darkUI:Defaults.BorderThickness}">
+            <StackPanel Margin="{x:Static darkUI:Defaults.MediumThickness}">
+                <!-- Red -->
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="60"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0" Content="Red:" VerticalAlignment="Center"/>
+                    <Slider x:Name="RedSlider" 
+                           Grid.Column="1" 
+                           Minimum="0" 
+                           Maximum="255" 
+                           Value="255"
+                           TickFrequency="1"
+                           IsSnapToTickEnabled="True"
+                           ValueChanged="RgbSlider_ValueChanged"
+                           VerticalAlignment="Center"/>
+                    <TextBox x:Name="RedTextBox" 
+                            Grid.Column="2" 
+                            Text="255"
+                            TextChanged="RgbTextBox_TextChanged"
+                            Width="50"
+                            Margin="5,0,0,0"/>
+                </Grid>
 
-            <!-- Green -->
-            <Grid Margin="0,0,0,10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="40"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="60"/>
-                </Grid.ColumnDefinitions>
-                <Label Grid.Column="0" Content="Green:" VerticalAlignment="Center"/>
-                <Slider x:Name="GreenSlider" 
-                       Grid.Column="1" 
-                       Minimum="0" 
-                       Maximum="255" 
-                       Value="255"
-                       TickFrequency="1"
-                       IsSnapToTickEnabled="True"
-                       ValueChanged="RgbSlider_ValueChanged"
-                       VerticalAlignment="Center"/>
-                <TextBox x:Name="GreenTextBox" 
-                        Grid.Column="2" 
-                        Text="255"
-                        TextChanged="RgbTextBox_TextChanged"
-                        Width="50"/>
-            </Grid>
+                <!-- Green -->
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="60"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0" Content="Green:" VerticalAlignment="Center"/>
+                    <Slider x:Name="GreenSlider" 
+                           Grid.Column="1" 
+                           Minimum="0" 
+                           Maximum="255" 
+                           Value="255"
+                           TickFrequency="1"
+                           IsSnapToTickEnabled="True"
+                           ValueChanged="RgbSlider_ValueChanged"
+                           VerticalAlignment="Center"/>
+                    <TextBox x:Name="GreenTextBox" 
+                            Grid.Column="2" 
+                            Text="255"
+                            TextChanged="RgbTextBox_TextChanged"
+                            Width="50"
+                            Margin="5,0,0,0"/>
+                </Grid>
 
-            <!-- Blue -->
-            <Grid Margin="0,0,0,10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="40"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="60"/>
-                </Grid.ColumnDefinitions>
-                <Label Grid.Column="0" Content="Blue:" VerticalAlignment="Center"/>
-                <Slider x:Name="BlueSlider" 
-                       Grid.Column="1" 
-                       Minimum="0" 
-                       Maximum="255" 
-                       Value="255"
-                       TickFrequency="1"
-                       IsSnapToTickEnabled="True"
-                       ValueChanged="RgbSlider_ValueChanged"
-                       VerticalAlignment="Center"/>
-                <TextBox x:Name="BlueTextBox" 
-                        Grid.Column="2" 
-                        Text="255"
-                        TextChanged="RgbTextBox_TextChanged"
-                        Width="50"/>
-            </Grid>
-        </StackPanel>
+                <!-- Blue -->
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="60"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0" Content="Blue:" VerticalAlignment="Center"/>
+                    <Slider x:Name="BlueSlider" 
+                           Grid.Column="1" 
+                           Minimum="0" 
+                           Maximum="255" 
+                           Value="255"
+                           TickFrequency="1"
+                           IsSnapToTickEnabled="True"
+                           ValueChanged="RgbSlider_ValueChanged"
+                           VerticalAlignment="Center"/>
+                    <TextBox x:Name="BlueTextBox" 
+                            Grid.Column="2" 
+                            Text="255"
+                            TextChanged="RgbTextBox_TextChanged"
+                            Width="50"
+                            Margin="5,0,0,0"/>
+                </Grid>
+            </StackPanel>
+        </Border>
 
         <!-- Hex Input -->
-        <Grid Grid.Row="2" Margin="0,10,0,15">
+        <Grid Grid.Row="2">
+            <Grid.Margin>
+                <Thickness Top="{x:Static darkUI:Defaults.MediumThicknessWidth}" Bottom="{x:Static darkUI:Defaults.MediumThicknessWidth}"/>
+            </Grid.Margin>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -146,17 +137,20 @@
         </Grid>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="3" 
-                   Orientation="Horizontal" 
-                   HorizontalAlignment="Right">
+        <controls:SpacedStack Grid.Row="3" 
+                              HorizontalAlignment="Right"
+                              Orientation="Horizontal"
+                              Spacing="{x:Static darkUI:Defaults.MediumThicknessWidth}">
             <Button x:Name="OKButton" 
                    Content="OK" 
                    Click="OKButton_Click"
+                   Width="80"
                    IsDefault="True"/>
             <Button x:Name="CancelButton" 
                    Content="Cancel" 
                    Click="CancelButton_Click"
+                   Width="80"
                    IsCancel="True"/>
-        </StackPanel>
+        </controls:SpacedStack>
     </Grid>
 </Window>
