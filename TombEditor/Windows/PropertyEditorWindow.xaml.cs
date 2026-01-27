@@ -10,21 +10,26 @@ using TombLib.LevelData.Properties;
 namespace TombEditor.Windows
 {
     /// <summary>
-    /// WPF window for editing object properties dynamically
+    /// WPF window for editing object properties dynamically (supports both single and batch editing)
     /// </summary>
     public partial class PropertyEditorWindow : Window
     {
         private readonly ItemInstance _instance;
+        private readonly List<ItemInstance> _instances;
+        private readonly bool _isBatchMode;
         private readonly List<PropertyDefinition> _propertyDefinitions;
         private readonly Dictionary<string, FrameworkElement> _propertyControls;
         private readonly bool _isTombEngine;
 
         public bool PropertiesChanged { get; private set; }
 
+        // Constructor for single object editing
         public PropertyEditorWindow(ItemInstance instance, bool isTombEngine)
         {
             InitializeComponent();
             _instance = instance;
+            _instances = new List<ItemInstance> { instance };
+            _isBatchMode = false;
             _isTombEngine = isTombEngine;
             _propertyControls = new Dictionary<string, FrameworkElement>();
             PropertiesChanged = false;
@@ -33,7 +38,9 @@ namespace TombEditor.Windows
             if (instance is MoveableInstance moveable)
             {
                 TitleText.Text = "Moveable Properties";
+                TitleText.Style = (Style)TryFindResource("PropertyNameLabel");
                 SubtitleText.Text = $"Object: {moveable.WadObjectId.ToString(TRVersion.Game.TombEngine)}";
+                SubtitleText.Style = (Style)TryFindResource("PropertyNameLabel");
                 
                 var propertySet = PropertyManager.Instance.GetMoveableProperties(moveable.WadObjectId.ToString(TRVersion.Game.TombEngine));
                 _propertyDefinitions = propertySet.Properties;
@@ -41,7 +48,58 @@ namespace TombEditor.Windows
             else if (instance is StaticInstance staticMesh)
             {
                 TitleText.Text = "Static Properties";
+                TitleText.Style = (Style)TryFindResource("PropertyNameLabel");
                 SubtitleText.Text = $"Object: {staticMesh.WadObjectId.ToString(TRVersion.Game.TombEngine)}";
+                SubtitleText.Style = (Style)TryFindResource("PropertyNameLabel");
+                
+                var propertySet = PropertyManager.Instance.GetStaticProperties();
+                _propertyDefinitions = propertySet.Properties;
+            }
+            else
+            {
+                _propertyDefinitions = new List<PropertyDefinition>();
+            }
+
+            // Build the UI
+            BuildPropertyControls();
+        }
+
+        // Constructor for batch editing multiple objects
+        public PropertyEditorWindow(List<ItemInstance> instances, bool isTombEngine)
+        {
+            if (instances == null || instances.Count == 0)
+                throw new ArgumentException("No instances provided for batch editing");
+
+            // Verify all instances are of the same type
+            var firstType = instances[0].GetType();
+            if (!instances.All(i => i.GetType() == firstType))
+                throw new ArgumentException("All instances must be of the same type for batch editing");
+
+            InitializeComponent();
+            _instance = instances[0]; // Keep reference to first for property definitions
+            _instances = instances;
+            _isBatchMode = true;
+            _isTombEngine = isTombEngine;
+            _propertyControls = new Dictionary<string, FrameworkElement>();
+            PropertiesChanged = false;
+
+            // Load property definitions based on first instance type
+            if (instances[0] is MoveableInstance moveable)
+            {
+                TitleText.Text = $"Batch Edit {instances.Count} Moveables";
+                TitleText.Style = (Style)TryFindResource("PropertyNameLabel");
+                SubtitleText.Text = "Changes will be applied to all selected moveables";
+                SubtitleText.Style = (Style)TryFindResource("PropertyNameLabel");
+                
+                var propertySet = PropertyManager.Instance.GetMoveableProperties(moveable.WadObjectId.ToString(TRVersion.Game.TombEngine));
+                _propertyDefinitions = propertySet.Properties;
+            }
+            else if (instances[0] is StaticInstance)
+            {
+                TitleText.Text = $"Batch Edit {instances.Count} Statics";
+                TitleText.Style = (Style)TryFindResource("PropertyNameLabel");
+                SubtitleText.Text = "Changes will be applied to all selected statics";
+                SubtitleText.Style = (Style)TryFindResource("PropertyNameLabel");
                 
                 var propertySet = PropertyManager.Instance.GetStaticProperties();
                 _propertyDefinitions = propertySet.Properties;
@@ -62,6 +120,20 @@ namespace TombEditor.Windows
         {
             PropertiesPanel.Children.Clear();
             _propertyControls.Clear();
+
+            // Add info message for batch mode
+            if (_isBatchMode)
+            {
+                var infoBlock = new TextBlock
+                {
+                    Text = "Only properties that you modify will be updated across all selected objects. Leave unchanged to keep individual values.",
+                    Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground_Weak") ?? System.Windows.Media.Brushes.LightGray,
+                    FontSize = 10,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 0, 0, 10)
+                };
+                PropertiesPanel.Children.Add(infoBlock);
+            }
 
             foreach (var propDef in _propertyDefinitions)
             {
@@ -142,39 +214,45 @@ namespace TombEditor.Windows
         /// </summary>
         private FrameworkElement CreateControlForProperty(PropertyDefinition propDef)
         {
-            // Get current value from instance
-            object currentValue = GetPropertyValue(propDef.Name);
+            // Get current value from instance (or detect mixed values in batch mode)
+            object currentValue = null;
+            bool hasMixedValues = _isBatchMode && HasMixedValues(propDef.Name);
+            
+            if (!hasMixedValues)
+            {
+                currentValue = GetPropertyValue(propDef.Name);
+            }
 
             switch (propDef.Type)
             {
                 case PropertyType.Integer:
-                    return CreateIntegerControl(propDef, currentValue);
+                    return CreateIntegerControl(propDef, currentValue, hasMixedValues);
 
                 case PropertyType.Float:
-                    return CreateFloatControl(propDef, currentValue);
+                    return CreateFloatControl(propDef, currentValue, hasMixedValues);
 
                 case PropertyType.Boolean:
-                    return CreateBooleanControl(propDef, currentValue);
+                    return CreateBooleanControl(propDef, currentValue, hasMixedValues);
 
                 case PropertyType.Dropdown:
-                    return CreateDropdownControl(propDef, currentValue);
+                    return CreateDropdownControl(propDef, currentValue, hasMixedValues);
 
                 case PropertyType.Checkbox:
-                    return CreateCheckboxListControl(propDef, currentValue);
+                    return CreateCheckboxListControl(propDef, currentValue, hasMixedValues);
 
                 case PropertyType.Color:
-                    return CreateColorControl(propDef, currentValue);
+                    return CreateColorControl(propDef, currentValue, hasMixedValues);
 
                 default:
-                    return CreateTextControl(propDef, currentValue);
+                    return CreateTextControl(propDef, currentValue, hasMixedValues);
             }
         }
 
-        private FrameworkElement CreateIntegerControl(PropertyDefinition propDef, object currentValue)
+        private FrameworkElement CreateIntegerControl(PropertyDefinition propDef, object currentValue, bool hasMixedValues)
         {
             var textBox = new TextBox
             {
-                Text = currentValue?.ToString() ?? propDef.Default ?? "0"
+                Text = hasMixedValues ? "<Mixed>" : (currentValue?.ToString() ?? propDef.Default ?? "0")
             };
 
             // Add validation for integers
@@ -186,11 +264,11 @@ namespace TombEditor.Windows
             return textBox;
         }
 
-        private FrameworkElement CreateFloatControl(PropertyDefinition propDef, object currentValue)
+        private FrameworkElement CreateFloatControl(PropertyDefinition propDef, object currentValue, bool hasMixedValues)
         {
             var textBox = new TextBox
             {
-                Text = currentValue?.ToString() ?? propDef.Default ?? "0.0"
+                Text = hasMixedValues ? "<Mixed>" : (currentValue?.ToString() ?? propDef.Default ?? "0.0")
             };
 
             // Add validation for floats during typing
@@ -203,6 +281,9 @@ namespace TombEditor.Windows
             textBox.LostFocus += (s, e) =>
             {
                 var tb = s as TextBox;
+                if (tb.Text == "<Mixed>")
+                    return; // Don't validate placeholder
+                    
                 if (!float.TryParse(tb.Text, out float val))
                 {
                     // Reset to default if invalid
@@ -213,21 +294,31 @@ namespace TombEditor.Windows
             return textBox;
         }
 
-        private FrameworkElement CreateBooleanControl(PropertyDefinition propDef, object currentValue)
+        private FrameworkElement CreateBooleanControl(PropertyDefinition propDef, object currentValue, bool hasMixedValues)
         {
-            bool value = currentValue != null ? Convert.ToBoolean(currentValue) : 
-                         bool.TryParse(propDef.Default, out bool defVal) ? defVal : false;
+            bool? value = null;
+            
+            if (hasMixedValues)
+            {
+                value = null; // Indeterminate state for mixed values
+            }
+            else
+            {
+                value = currentValue != null ? Convert.ToBoolean(currentValue) : 
+                        bool.TryParse(propDef.Default, out bool defVal) ? defVal : false;
+            }
 
             var checkBox = new CheckBox
             {
                 Content = propDef.Name,
-                IsChecked = value
+                IsChecked = value,
+                IsThreeState = hasMixedValues // Allow indeterminate in batch mode
             };
 
             return checkBox;
         }
 
-        private FrameworkElement CreateDropdownControl(PropertyDefinition propDef, object currentValue)
+        private FrameworkElement CreateDropdownControl(PropertyDefinition propDef, object currentValue, bool hasMixedValues)
         {
             var comboBox = new ComboBox();
 
@@ -239,24 +330,40 @@ namespace TombEditor.Windows
                 }
             }
 
-            string currentStr = currentValue?.ToString() ?? propDef.Default ?? "";
-            if (comboBox.Items.Contains(currentStr))
-                comboBox.SelectedItem = currentStr;
-            else if (comboBox.Items.Count > 0)
+            if (hasMixedValues)
+            {
+                comboBox.Items.Insert(0, "<Mixed>");
                 comboBox.SelectedIndex = 0;
+            }
+            else
+            {
+                string currentStr = currentValue?.ToString() ?? propDef.Default ?? "";
+                if (comboBox.Items.Contains(currentStr))
+                    comboBox.SelectedItem = currentStr;
+                else if (comboBox.Items.Count > 0)
+                    comboBox.SelectedIndex = 0;
+            }
 
             return comboBox;
         }
 
-        private FrameworkElement CreateCheckboxListControl(PropertyDefinition propDef, object currentValue)
+        private FrameworkElement CreateCheckboxListControl(PropertyDefinition propDef, object currentValue, bool hasMixedValues)
         {
-            var stackPanel = new StackPanel();
+            var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
 
-            List<string> selectedValues = new List<string>();
-            if (currentValue is List<string> list)
-                selectedValues = list;
-            else if (currentValue is string str && !string.IsNullOrEmpty(str))
-                selectedValues = str.Split(',').Select(s => s.Trim()).ToList();
+            if (hasMixedValues)
+            {
+                // In batch mode with mixed values, show a label
+                var mixedLabel = new TextBlock
+                {
+                    Text = "<Mixed values>",
+                    FontStyle = FontStyles.Italic,
+                    Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground_Weak") ?? System.Windows.Media.Brushes.Gray
+                };
+                stackPanel.Children.Add(mixedLabel);
+            }
+            
+            var selectedValues = currentValue?.ToString()?.Split(',').Select(s => s.Trim()).ToList() ?? new List<string>();
 
             if (propDef.Options != null && propDef.Options.Count > 0)
             {
@@ -265,8 +372,9 @@ namespace TombEditor.Windows
                     var checkBox = new CheckBox
                     {
                         Content = option,
-                        IsChecked = selectedValues.Contains(option),
-                        Tag = option
+                        IsChecked = !hasMixedValues && selectedValues.Contains(option),
+                        Tag = option,
+                        Margin = new Thickness(0, 2, 0, 2)
                     };
                     stackPanel.Children.Add(checkBox);
                 }
@@ -275,10 +383,10 @@ namespace TombEditor.Windows
             return stackPanel;
         }
 
-        private FrameworkElement CreateColorControl(PropertyDefinition propDef, object currentValue)
+        private FrameworkElement CreateColorControl(PropertyDefinition propDef, object currentValue, bool hasMixedValues)
         {
             // Parse current color
-            string colorStr = currentValue?.ToString() ?? propDef.Default ?? "#FFFFFF";
+            string colorStr = hasMixedValues ? "#808080" : (currentValue?.ToString() ?? propDef.Default ?? "#FFFFFF");
             var color = ParseColor(colorStr);
 
             // Create a button that shows the current color and opens the color picker
@@ -287,7 +395,7 @@ namespace TombEditor.Windows
                 Height = 30,
                 MinWidth = 80,
                 Padding = new Thickness(5),
-                Tag = new { PropDef = propDef, CurrentColor = color }
+                Tag = new { PropDef = propDef, CurrentColor = color, HasMixedValues = hasMixedValues }
             };
 
             // Create a grid inside the button to show color preview and text
@@ -308,7 +416,7 @@ namespace TombEditor.Windows
             // Hex text
             var hexText = new TextBlock
             {
-                Text = ColorToHex(color),
+                Text = hasMixedValues ? "<Mixed>" : ColorToHex(color),
                 Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground") ?? System.Windows.Media.Brushes.LightGray,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -350,7 +458,7 @@ namespace TombEditor.Windows
                         }
                         
                         // Update tag
-                        btn.Tag = new { PropDef = tag.PropDef, CurrentColor = selectedColor };
+                        btn.Tag = new { PropDef = tag.PropDef, CurrentColor = selectedColor, HasMixedValues = false };
                     }
                 }
             };
@@ -420,11 +528,11 @@ namespace TombEditor.Windows
             return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
         }
 
-        private FrameworkElement CreateTextControl(PropertyDefinition propDef, object currentValue)
+        private FrameworkElement CreateTextControl(PropertyDefinition propDef, object currentValue, bool hasMixedValues)
         {
             return new TextBox
             {
-                Text = currentValue?.ToString() ?? propDef.Default ?? ""
+                Text = hasMixedValues ? "<Mixed>" : (currentValue?.ToString() ?? propDef.Default ?? "")
             };
         }
 
@@ -457,22 +565,65 @@ namespace TombEditor.Windows
         }
 
         /// <summary>
-        /// Saves all property values back to the instance
+        /// Saves all property values back to the instance(s)
         /// </summary>
         private void SaveProperties()
         {
-            foreach (var propDef in _propertyDefinitions)
+            if (_isBatchMode)
             {
-                if (!_propertyControls.ContainsKey(propDef.Name))
-                    continue;
+                // For batch mode, only update properties that have been modified
+                foreach (var propDef in _propertyDefinitions)
+                {
+                    if (!_propertyControls.ContainsKey(propDef.Name))
+                        continue;
 
-                var control = _propertyControls[propDef.Name];
-                object value = ExtractValueFromControl(control, propDef.Type);
+                    var control = _propertyControls[propDef.Name];
+                    
+                    // Check if value was modified (not in indeterminate state for batch)
+                    if (!IsValueModified(control, propDef))
+                        continue;
 
-                SetPropertyValue(propDef.Name, value);
+                    object value = ExtractValueFromControl(control, propDef.Type);
+
+                    // Apply to all instances
+                    foreach (var instance in _instances)
+                    {
+                        SetPropertyValueOnInstance(instance, propDef.Name, value);
+                    }
+                }
+            }
+            else
+            {
+                // For single mode, update all properties
+                foreach (var propDef in _propertyDefinitions)
+                {
+                    if (!_propertyControls.ContainsKey(propDef.Name))
+                        continue;
+
+                    var control = _propertyControls[propDef.Name];
+                    object value = ExtractValueFromControl(control, propDef.Type);
+
+                    SetPropertyValue(propDef.Name, value);
+                }
             }
 
             PropertiesChanged = true;
+        }
+
+        /// <summary>
+        /// Checks if a control's value has been modified in batch mode
+        /// </summary>
+        private bool IsValueModified(FrameworkElement control, PropertyDefinition propDef)
+        {
+            // For checkboxes in batch mode, null (indeterminate) means not modified
+            if (propDef.Type == PropertyType.Boolean && control is CheckBox cb)
+            {
+                return cb.IsChecked != null;
+            }
+
+            // For other controls, we assume modification if they have a value
+            // In the future, we could track which controls were actually interacted with
+            return true;
         }
 
         /// <summary>
@@ -535,11 +686,11 @@ namespace TombEditor.Windows
         }
 
         /// <summary>
-        /// Sets a property value on the instance
+        /// Sets a property value on a specific instance
         /// </summary>
-        private void SetPropertyValue(string propertyName, object value)
+        private void SetPropertyValueOnInstance(ItemInstance instance, string propertyName, object value)
         {
-            if (_instance is MoveableInstance moveable)
+            if (instance is MoveableInstance moveable)
             {
                 if (propertyName == "HP")
                     moveable.CustomProperties.SetProperty("HP", value);
@@ -555,7 +706,7 @@ namespace TombEditor.Windows
                 else
                     moveable.CustomProperties.SetProperty(propertyName, value);
             }
-            else if (_instance is StaticInstance staticMesh)
+            else if (instance is StaticInstance staticMesh)
             {
                 if (propertyName == "HP")
                     staticMesh.CustomProperties.SetProperty("HP", value);
@@ -571,6 +722,67 @@ namespace TombEditor.Windows
                 else
                     staticMesh.CustomProperties.SetProperty(propertyName, value);
             }
+        }
+
+        /// <summary>
+        /// Sets a property value on the instance (single mode)
+        /// </summary>
+        private void SetPropertyValue(string propertyName, object value)
+        {
+            SetPropertyValueOnInstance(_instance, propertyName, value);
+        }
+
+        /// <summary>
+        /// Checks if all instances have the same value for a property
+        /// </summary>
+        private bool HasMixedValues(string propertyName)
+        {
+            if (!_isBatchMode || _instances.Count <= 1)
+                return false;
+
+            var firstValue = GetPropertyValueFromInstance(_instances[0], propertyName);
+            
+            for (int i = 1; i < _instances.Count; i++)
+            {
+                var currentValue = GetPropertyValueFromInstance(_instances[i], propertyName);
+                
+                // Compare values (handle null cases)
+                if (firstValue == null && currentValue == null)
+                    continue;
+                if (firstValue == null || currentValue == null)
+                    return true;
+                if (!firstValue.Equals(currentValue))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Gets a property value from a specific instance
+        /// </summary>
+        private object GetPropertyValueFromInstance(ItemInstance instance, string propertyName)
+        {
+            if (instance is MoveableInstance moveable)
+            {
+                if (propertyName == "HP")
+                    return moveable.CustomProperties.GetProperty<int>("HP", 100);
+                else if (propertyName == "OCB")
+                    return (int)moveable.Ocb;
+                else
+                    return moveable.CustomProperties.GetProperty<string>(propertyName, "");
+            }
+            else if (instance is StaticInstance staticMesh)
+            {
+                if (propertyName == "HP")
+                    return staticMesh.CustomProperties.GetProperty<int>("HP", 100);
+                else if (propertyName == "OCB")
+                    return (int)staticMesh.Ocb;
+                else
+                    return staticMesh.CustomProperties.GetProperty<string>(propertyName, "");
+            }
+
+            return null;
         }
 
         /// <summary>
