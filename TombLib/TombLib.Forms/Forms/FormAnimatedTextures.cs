@@ -307,6 +307,15 @@ namespace TombLib.Forms
 				for (int i = 1; i <= 32; i++)
 					comboFps.Items.Add(new NgAnimatedTextureSettingPair(i, i + " FPS"));
 			}
+			else if (_version == TRVersion.Game.TombEngine)
+			{
+				comboUvRotate.Enabled = false;
+
+				comboFps.Enabled = true;
+
+				for (int i = 1; i <= 120; i++)
+					comboFps.Items.Add(new TombEngineFpsSetting(i, i + " FPS"));
+			}
 			else
 			{
 				comboUvRotate.Enabled = false;
