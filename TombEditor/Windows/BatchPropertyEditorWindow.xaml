@@ -21,6 +21,12 @@
             <Setter Property="Margin" Value="0,0,10,0"/>
             <Setter Property="FontSize" Value="12"/>
         </Style>
+        <!-- Style for property rows -->
+        <Style x:Key="PropertyRowBorder" TargetType="Border">
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush_Border_Low}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="5"/>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="{x:Static darkUI:Defaults.MediumThickness}">

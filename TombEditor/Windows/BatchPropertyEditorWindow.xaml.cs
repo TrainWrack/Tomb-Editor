@@ -76,7 +76,7 @@ namespace TombEditor.Windows
             var infoBlock = new TextBlock
             {
                 Text = "Only properties that you modify will be updated across all selected objects. Leave unchanged to keep individual values.",
-                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(170, 170, 170)),
+                Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground_Weak") ?? System.Windows.Media.Brushes.LightGray,
                 FontSize = 10,
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 0, 0, 10)
@@ -85,39 +85,50 @@ namespace TombEditor.Windows
 
             foreach (var propDef in _propertyDefinitions)
             {
-                // Create a group box for each property
-                var groupBox = new GroupBox
+                // Create bordered row (same as PropertyEditorWindow)
+                var rowBorder = new Border
                 {
-                    Header = propDef.Name,
-                    Margin = new Thickness(0, 5, 0, 5)
+                    Style = (Style)TryFindResource("PropertyRowBorder")
                 };
 
-                var stackPanel = new StackPanel();
+                // Create grid with two columns for property grid layout
+                var grid = new Grid();
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150) });
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-                // Add description if available
+                // Property name label
+                var nameLabel = new TextBlock
+                {
+                    Text = propDef.Name,
+                    Style = (Style)TryFindResource("PropertyNameLabel")
+                };
+                Grid.SetColumn(nameLabel, 0);
+
+                // Add tooltip with description if available
                 if (!string.IsNullOrEmpty(propDef.Description))
                 {
-                    var descLabel = new TextBlock
-                    {
-                        Text = propDef.Description,
-                        Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(170, 170, 170)),
-                        FontSize = 10,
-                        TextWrapping = TextWrapping.Wrap,
-                        Margin = new Thickness(0, 0, 0, 5)
-                    };
-                    stackPanel.Children.Add(descLabel);
+                    nameLabel.ToolTip = propDef.Description;
                 }
 
                 // Create control based on property type
                 FrameworkElement control = CreateBatchControlForProperty(propDef);
                 if (control != null)
                 {
-                    stackPanel.Children.Add(control);
+                    Grid.SetColumn(control, 1);
                     _propertyControls[propDef.Name] = control;
+
+                    // Also add tooltip to the control
+                    if (!string.IsNullOrEmpty(propDef.Description))
+                    {
+                        control.ToolTip = propDef.Description;
+                    }
+
+                    grid.Children.Add(nameLabel);
+                    grid.Children.Add(control);
                 }
 
-                groupBox.Content = stackPanel;
-                PropertiesPanel.Children.Add(groupBox);
+                rowBorder.Child = grid;
+                PropertiesPanel.Children.Add(rowBorder);
             }
         }
 
@@ -213,7 +224,7 @@ namespace TombEditor.Windows
                     var colorPreview = new System.Windows.Shapes.Rectangle
                     {
                         Height = 40,
-                        Stroke = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(85, 85, 85)),
+                        Stroke = (System.Windows.Media.Brush)TryFindResource("Brush_Border_Low") ?? System.Windows.Media.Brushes.Gray,
                         StrokeThickness = 1,
                         Margin = new Thickness(0, 0, 0, 10)
                     };
@@ -255,14 +266,14 @@ namespace TombEditor.Windows
                     var hexLabel = new TextBlock
                     {
                         Text = valuesAreSame ? "Hex: " : "Hex: <Mixed> → ",
-                        Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(241, 241, 241)),
+                        Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground") ?? System.Windows.Media.Brushes.LightGray,
                         VerticalAlignment = VerticalAlignment.Center,
                         Margin = new Thickness(0, 0, 5, 0)
                     };
                     var hexValue = new TextBlock
                     {
                         Text = valuesAreSame ? ColorToHex(color) : ColorToHex(System.Windows.Media.Color.FromRgb(128, 128, 128)),
-                        Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(170, 170, 170)),
+                        Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground_Weak") ?? System.Windows.Media.Brushes.Gray,
                         VerticalAlignment = VerticalAlignment.Center,
                         FontFamily = new System.Windows.Media.FontFamily("Consolas"),
                         Tag = "HexDisplay"
@@ -635,14 +646,14 @@ namespace TombEditor.Windows
             {
                 Text = label,
                 Width = 50,
-                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(241, 241, 241)),
+                Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground") ?? System.Windows.Media.Brushes.LightGray,
                 VerticalAlignment = VerticalAlignment.Center
             };
             var valueText = new TextBlock
             {
                 Text = initialValue.ToString(),
                 Width = 35,
-                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(170, 170, 170)),
+                Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground_Weak") ?? System.Windows.Media.Brushes.Gray,
                 VerticalAlignment = VerticalAlignment.Center,
                 TextAlignment = TextAlignment.Right,
                 FontFamily = new System.Windows.Media.FontFamily("Consolas"),
