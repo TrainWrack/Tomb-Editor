@@ -552,7 +552,7 @@ namespace TombLib.LevelData.IO
                     {
                         if (isTEN)
                         {
-                            using (var chunk = chunkIO.WriteChunk(Prj2Chunks.ObjectMovableTombEngine2, LEB128.MaximumSize2Byte))
+                            using (var chunk = chunkIO.WriteChunk(Prj2Chunks.ObjectMovableTombEngine3, LEB128.MaximumSize2Byte))
                             {
                                 var instance = (MoveableInstance)o;
                                 LEB128.Write(chunkIO.Raw, objectInstanceLookup.TryGetOrDefault(instance, -1));
@@ -568,6 +568,9 @@ namespace TombLib.LevelData.IO
                                 chunkIO.Raw.Write(instance.CodeBits);
                                 chunkIO.Raw.Write(instance.Color);
                                 chunkIO.Raw.WriteStringUTF8(instance.LuaName != null ? instance.LuaName : "");
+                                
+                                // Write custom properties
+                                WriteCustomProperties(chunkIO.Raw, instance.CustomProperties);
                             }
                         }
                         else
@@ -592,7 +595,7 @@ namespace TombLib.LevelData.IO
                     {
                         if (isTEN)
                         {
-                            using (var chunk = chunkIO.WriteChunk(Prj2Chunks.ObjectStaticTombEngine2, LEB128.MaximumSize2Byte))
+                            using (var chunk = chunkIO.WriteChunk(Prj2Chunks.ObjectStaticTombEngine3, LEB128.MaximumSize2Byte))
                             {
                                 var instance = (StaticInstance)o;
                                 LEB128.Write(chunkIO.Raw, objectInstanceLookup.TryGetOrDefault(instance, -1));
@@ -606,6 +609,9 @@ namespace TombLib.LevelData.IO
                                 chunkIO.Raw.Write(instance.Color);
                                 chunkIO.Raw.Write(instance.Ocb);
                                 chunkIO.Raw.WriteStringUTF8(instance.LuaName != null ? instance.LuaName : string.Empty);
+                                
+                                // Write custom properties
+                                WriteCustomProperties(chunkIO.Raw, instance.CustomProperties);
                             }
                         }
                         else
@@ -946,6 +952,22 @@ namespace TombLib.LevelData.IO
                 if ((node as TriggerNodeCondition)?.Else != null)
                     WriteNode(chunkIO, (node as TriggerNodeCondition).Else, Prj2Chunks.EventNodeElse);
             });
+        }
+
+        private static void WriteCustomProperties(BinaryWriterEx writer, PropertyCollection properties)
+        {
+            if (properties == null || properties.Properties.Count == 0)
+            {
+                writer.Write((ushort)0); // Property count
+                return;
+            }
+
+            writer.Write((ushort)properties.Properties.Count);
+            foreach (var kvp in properties.Properties)
+            {
+                writer.WriteStringUTF8(kvp.Key);
+                writer.WriteStringUTF8(kvp.Value?.ToString() ?? "");
+            }
         }
     }
 }
