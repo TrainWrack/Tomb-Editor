@@ -123,12 +123,35 @@ namespace TombEditor.Windows
                         control.ToolTip = propDef.Description;
                     }
 
+                    // Add focus handlers to update description panel
+                    control.GotFocus += (s, e) => UpdateDescriptionPanel(propDef);
+                    control.MouseEnter += (s, e) => UpdateDescriptionPanel(propDef);
+
                     grid.Children.Add(nameLabel);
                     grid.Children.Add(control);
                 }
 
                 rowBorder.Child = grid;
                 PropertiesPanel.Children.Add(rowBorder);
+            }
+        }
+
+        /// <summary>
+        /// Updates the description panel with the given property's description
+        /// </summary>
+        private void UpdateDescriptionPanel(PropertyDefinition propDef)
+        {
+            if (!string.IsNullOrEmpty(propDef.Description))
+            {
+                DescriptionText.Text = propDef.Description;
+                DescriptionText.FontStyle = FontStyles.Normal;
+                DescriptionText.Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground") ?? System.Windows.Media.Brushes.LightGray;
+            }
+            else
+            {
+                DescriptionText.Text = "No description available for this property.";
+                DescriptionText.FontStyle = FontStyles.Italic;
+                DescriptionText.Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground_Weak") ?? System.Windows.Media.Brushes.Gray;
             }
         }
 
@@ -169,26 +192,23 @@ namespace TombEditor.Windows
                     return textBox;
 
                 case PropertyType.Boolean:
-                    var stackPanel = new StackPanel { Orientation = Orientation.Horizontal };
-                    var radioTrue = new RadioButton { Content = "True", GroupName = propDef.Name };
-                    var radioFalse = new RadioButton { Content = "False", GroupName = propDef.Name };
-                    var radioMixed = new RadioButton { Content = "<Mixed>", GroupName = propDef.Name };
+                    var checkBox = new CheckBox
+                    {
+                        Content = propDef.Name,
+                        Tag = new { IsBatch = true, PropDef = propDef }
+                    };
 
                     if (valuesAreSame && commonValue != null)
                     {
-                        bool val = Convert.ToBoolean(commonValue);
-                        radioTrue.IsChecked = val;
-                        radioFalse.IsChecked = !val;
+                        checkBox.IsChecked = Convert.ToBoolean(commonValue);
                     }
                     else
                     {
-                        radioMixed.IsChecked = true;
+                        // Use indeterminate state for mixed values
+                        checkBox.IsChecked = null;
                     }
 
-                    stackPanel.Children.Add(radioTrue);
-                    stackPanel.Children.Add(radioFalse);
-                    stackPanel.Children.Add(radioMixed);
-                    return stackPanel;
+                    return checkBox;
 
                 case PropertyType.Dropdown:
                     var comboBox = new ComboBox();
@@ -353,18 +373,14 @@ namespace TombEditor.Windows
                 return !string.IsNullOrEmpty(tb.Text) && tb.Text != "<Mixed Values>" && tb.Text != "<Mixed>";
             if (control is ComboBox cb)
                 return cb.SelectedIndex > 0; // Index 0 is "<Mixed Values>"
+            if (control is CheckBox checkBox && type == PropertyType.Boolean)
+            {
+                // If checkbox is indeterminate (null), it hasn't been modified
+                return checkBox.IsChecked != null;
+            }
             if (control is StackPanel sp)
             {
-                if (type == PropertyType.Boolean)
-                {
-                    foreach (var child in sp.Children)
-                    {
-                        if (child is RadioButton rb && rb.Content.ToString() == "<Mixed>" && rb.IsChecked == true)
-                            return false;
-                    }
-                    return true;
-                }
-                else if (type == PropertyType.Color)
+                if (type == PropertyType.Color)
                 {
                     // Color is always considered modified since we show sliders
                     // User intention to change is implied by opening the dialog
@@ -404,13 +420,11 @@ namespace TombEditor.Windows
                     return 0.0f;
 
                 case PropertyType.Boolean:
-                    if (control is StackPanel sp)
+                    if (control is CheckBox cb)
                     {
-                        foreach (var child in sp.Children)
-                        {
-                            if (child is RadioButton rb && rb.IsChecked == true && rb.Content.ToString() != "<Mixed>")
-                                return rb.Content.ToString() == "True";
-                        }
+                        // Only return value if it's been explicitly set (not indeterminate)
+                        if (cb.IsChecked.HasValue)
+                            return cb.IsChecked.Value;
                     }
                     return false;
 

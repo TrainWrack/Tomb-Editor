@@ -105,12 +105,35 @@ namespace TombEditor.Windows
                         control.ToolTip = propDef.Description;
                     }
 
+                    // Add focus handlers to update description panel
+                    control.GotFocus += (s, e) => UpdateDescriptionPanel(propDef);
+                    control.MouseEnter += (s, e) => UpdateDescriptionPanel(propDef);
+
                     grid.Children.Add(nameLabel);
                     grid.Children.Add(control);
                 }
 
                 rowBorder.Child = grid;
                 PropertiesPanel.Children.Add(rowBorder);
+            }
+        }
+
+        /// <summary>
+        /// Updates the description panel with the given property's description
+        /// </summary>
+        private void UpdateDescriptionPanel(PropertyDefinition propDef)
+        {
+            if (!string.IsNullOrEmpty(propDef.Description))
+            {
+                DescriptionText.Text = propDef.Description;
+                DescriptionText.FontStyle = FontStyles.Normal;
+                DescriptionText.Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground") ?? System.Windows.Media.Brushes.LightGray;
+            }
+            else
+            {
+                DescriptionText.Text = "No description available for this property.";
+                DescriptionText.FontStyle = FontStyles.Italic;
+                DescriptionText.Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground_Weak") ?? System.Windows.Media.Brushes.Gray;
             }
         }
 
@@ -195,26 +218,13 @@ namespace TombEditor.Windows
             bool value = currentValue != null ? Convert.ToBoolean(currentValue) : 
                          bool.TryParse(propDef.Default, out bool defVal) ? defVal : false;
 
-            var stackPanel = new StackPanel { Orientation = Orientation.Horizontal };
-
-            var radioTrue = new RadioButton
+            var checkBox = new CheckBox
             {
-                Content = "True",
-                GroupName = propDef.Name,
+                Content = propDef.Name,
                 IsChecked = value
             };
 
-            var radioFalse = new RadioButton
-            {
-                Content = "False",
-                GroupName = propDef.Name,
-                IsChecked = !value
-            };
-
-            stackPanel.Children.Add(radioTrue);
-            stackPanel.Children.Add(radioFalse);
-
-            return stackPanel;
+            return checkBox;
         }
 
         private FrameworkElement CreateDropdownControl(PropertyDefinition propDef, object currentValue)
@@ -483,13 +493,9 @@ namespace TombEditor.Windows
                     return 0.0f;
 
                 case PropertyType.Boolean:
-                    if (control is StackPanel sp)
+                    if (control is CheckBox cb)
                     {
-                        foreach (var child in sp.Children)
-                        {
-                            if (child is RadioButton rb && rb.IsChecked == true)
-                                return rb.Content.ToString() == "True";
-                        }
+                        return cb.IsChecked == true;
                     }
                     return false;
 
@@ -593,14 +599,10 @@ namespace TombEditor.Windows
                     break;
 
                 case PropertyType.Boolean:
-                    if (control is StackPanel sp)
+                    if (control is CheckBox cb)
                     {
                         bool defVal = bool.TryParse(propDef.Default, out bool b) && b;
-                        foreach (var child in sp.Children)
-                        {
-                            if (child is RadioButton rb)
-                                rb.IsChecked = (rb.Content.ToString() == "True") == defVal;
-                        }
+                        cb.IsChecked = defVal;
                     }
                     break;
 

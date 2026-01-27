@@ -34,6 +34,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Header -->
@@ -61,8 +62,27 @@
             </ScrollViewer>
         </Border>
 
+        <!-- Description Panel -->
+        <Border Grid.Row="2"
+                BorderBrush="{DynamicResource Brush_Border_Low}"
+                BorderThickness="{x:Static darkUI:Defaults.BorderThickness}"
+                Background="{DynamicResource Brush_Background}"
+                Margin="0,10,0,0"
+                MaxHeight="100">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Disabled">
+                <TextBlock x:Name="DescriptionText"
+                          Text="Select a property to see its description"
+                          Foreground="{DynamicResource Brush_Foreground_Weak}"
+                          FontSize="11"
+                          FontStyle="Italic"
+                          TextWrapping="Wrap"
+                          Margin="{x:Static darkUI:Defaults.SmallThickness}"/>
+            </ScrollViewer>
+        </Border>
+
         <!-- Buttons -->
-        <controls:SpacedStack Grid.Row="2"
+        <controls:SpacedStack Grid.Row="3"
                               HorizontalAlignment="Right"
                               Orientation="Horizontal"
                               Spacing="{x:Static darkUI:Defaults.MediumThicknessWidth}">
