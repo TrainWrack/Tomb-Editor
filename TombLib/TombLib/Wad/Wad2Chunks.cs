@@ -101,6 +101,7 @@ namespace TombLib.Wad
         public static readonly ChunkId Moveables = ChunkId.FromString("W2Moveables");
         /****/public static readonly ChunkId Moveable = ChunkId.FromString("W2Moveable");
         ///******/public static readonly ChunkId MoveableName = ChunkId.FromString("W2MovName");
+        /******/public static readonly ChunkId MoveableProperties = ChunkId.FromString("W2MovProps");
         /******/public static readonly ChunkId MoveableMeshes = ChunkId.FromString("W2MovMeshes");
         /********/public static readonly ChunkId MoveableMesh = ChunkId.FromString("W2MovMeshPtr");
         /********/public static readonly ChunkId MoveableSkin = ChunkId.FromString("W2MovSkin");

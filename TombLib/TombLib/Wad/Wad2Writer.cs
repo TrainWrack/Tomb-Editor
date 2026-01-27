@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using TombLib.IO;
 using TombLib.LevelData;
+using TombLib.LevelData.Properties;
 using TombLib.Utils;
 
 namespace TombLib.Wad
@@ -335,6 +336,12 @@ namespace TombLib.Wad
 
                         LEB128.Write(chunkIO.Raw, m.Id.TypeId);
 
+                        // Write custom properties for TombEngine WAD2 files
+                        if (wad.GameVersion == TRVersion.Game.TombEngine && m.CustomProperties != null)
+                        {
+                            WriteCustomProperties(chunkIO, m.CustomProperties);
+                        }
+
                         foreach (var mesh in m.Meshes)
                             WriteMesh(chunkIO, mesh, textureTable);
 
@@ -505,6 +512,24 @@ namespace TombLib.Wad
                 });
 
                 chunkIO.WriteChunkString(Wad2Chunks.UserNotes, wad.UserNotes);
+            });
+        }
+
+        private static void WriteCustomProperties(ChunkWriter chunkIO, PropertyCollection properties)
+        {
+            if (properties == null)
+                return;
+
+            chunkIO.WriteChunkWithChildren(Wad2Chunks.MoveableProperties, () =>
+            {
+                var props = properties.GetAll();
+                LEB128.Write(chunkIO.Raw, (ushort)props.Count);
+
+                foreach (var kvp in props)
+                {
+                    chunkIO.Raw.WriteStringUTF8(kvp.Key);
+                    chunkIO.Raw.WriteStringUTF8(kvp.Value);
+                }
             });
         }
     }
