@@ -457,7 +457,7 @@ namespace TombEditor.ToolWindows
                     return new StandardValuesCollection(options);
                 }
             }
-            return new StandardValuesCollection(new string[0]);
+            return new StandardValuesCollection(Array.Empty<string>());
         }
     }
 
