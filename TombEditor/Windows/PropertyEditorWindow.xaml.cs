@@ -82,10 +82,7 @@ namespace TombEditor.Windows
                 var nameLabel = new TextBlock
                 {
                     Text = propDef.Name,
-                    Foreground = new SolidColorBrush(Color.FromRgb(241, 241, 241)),
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(0, 0, 10, 0),
-                    FontSize = 12
+                    Style = (Style)TryFindResource("PropertyNameLabel")
                 };
                 Grid.SetColumn(nameLabel, 0);
 
@@ -292,7 +289,7 @@ namespace TombEditor.Windows
             var colorPreview = new System.Windows.Shapes.Rectangle
             {
                 Fill = new SolidColorBrush(color),
-                Stroke = new SolidColorBrush(System.Windows.Media.Color.FromRgb(128, 128, 128)),
+                Stroke = (System.Windows.Media.Brush)TryFindResource("Brush_Border_Low") ?? System.Windows.Media.Brushes.Gray,
                 StrokeThickness = 1,
                 Margin = new Thickness(0, 0, 5, 0)
             };
@@ -302,7 +299,7 @@ namespace TombEditor.Windows
             var hexText = new TextBlock
             {
                 Text = ColorToHex(color),
-                Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(241, 241, 241)),
+                Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground") ?? System.Windows.Media.Brushes.LightGray,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 FontFamily = new System.Windows.Media.FontFamily("Consolas")
