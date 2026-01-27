@@ -37,7 +37,12 @@ namespace TombEditor.Controls.ContextMenus
             { 
                 Items.Add(new ToolStripMenuItem("Edit object", Properties.Resources.general_edit_16, (o, e) =>
                 {
-                    EditorActions.EditObject(targetObject, owner);
+                    // If the target object is part of an ObjectGroup selection, edit the whole group
+                    var objectToEdit = targetObject;
+                    if (_editor.SelectedObject is ObjectGroup group && group.Contains(targetObject as PositionBasedObjectInstance))
+                        objectToEdit = group;
+                    
+                    EditorActions.EditObject(objectToEdit, owner);
                 }));
             }
 
