@@ -339,7 +339,7 @@ namespace TombLib.Wad
                         // Write custom properties for TombEngine WAD2 files
                         if (wad.GameVersion == TRVersion.Game.TombEngine && m.CustomProperties != null)
                         {
-                            WriteCustomProperties(chunkIO, m.CustomProperties);
+                            WriteCustomProperties(chunkIO, m.CustomProperties, Wad2Chunks.MoveableProperties);
                         }
 
                         foreach (var mesh in m.Meshes)
@@ -465,6 +465,12 @@ namespace TombLib.Wad
                         LEB128.Write(chunkIO.Raw, s.Id.TypeId);
                         LEB128.Write(chunkIO.Raw, s.Flags);
 
+                        // Write custom properties for TombEngine WAD2 files
+                        if (wad.GameVersion == TRVersion.Game.TombEngine && s.CustomProperties != null)
+                        {
+                            WriteCustomProperties(chunkIO, s.CustomProperties, Wad2Chunks.StaticProperties);
+                        }
+
                         WriteMesh(chunkIO, s.Mesh, textureTable);
 
                         chunkIO.WriteChunkInt(Wad2Chunks.StaticAmbientLight, s.AmbientLight);
@@ -515,12 +521,12 @@ namespace TombLib.Wad
             });
         }
 
-        private static void WriteCustomProperties(ChunkWriter chunkIO, PropertyCollection properties)
+        private static void WriteCustomProperties(ChunkWriter chunkIO, PropertyCollection properties, ChunkId chunkId)
         {
             if (properties == null)
                 return;
 
-            chunkIO.WriteChunkWithChildren(Wad2Chunks.MoveableProperties, () =>
+            chunkIO.WriteChunkWithChildren(chunkId, () =>
             {
                 var props = properties.GetAll();
                 LEB128.Write(chunkIO.Raw, (ushort)props.Count);

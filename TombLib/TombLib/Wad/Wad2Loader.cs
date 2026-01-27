@@ -956,7 +956,12 @@ namespace TombLib.Wad
 
                 chunkIO.ReadChunks((id2, chunkSize2) =>
                 {
-                    if (id2 == Wad2Chunks.StaticVisibilityBox)
+                    if (id2 == Wad2Chunks.StaticProperties)
+                    {
+                        // Load custom properties for TombEngine WAD2 files
+                        ReadCustomProperties(chunkIO, s.CustomProperties);
+                    }
+                    else if (id2 == Wad2Chunks.StaticVisibilityBox)
                     {
                         var min = Vector3.Zero;
                         var max = Vector3.Zero;

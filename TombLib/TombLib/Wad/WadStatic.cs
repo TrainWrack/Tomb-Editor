@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using TombLib.LevelData;
+using TombLib.LevelData.Properties;
 using TombLib.Utils;
 using TombLib.Wad.Catalog;
 
@@ -55,6 +56,7 @@ namespace TombLib.Wad
         
         public bool Shatter { get; set; } = false;
         public int ShatterSoundID { get; set; } = -1;
+        public PropertyCollection CustomProperties { get; set; } = new PropertyCollection();
 
         public string ToString(TRVersion.Game gameVersion) => Id.ToString(gameVersion.Native());
         public override string ToString() => Id.ToString();
@@ -63,6 +65,17 @@ namespace TombLib.Wad
         {
             WadStatic clone = (WadStatic)MemberwiseClone();
             clone.Mesh = Mesh.Clone();
+            
+            // Clone custom properties
+            if (CustomProperties != null)
+            {
+                clone.CustomProperties = new PropertyCollection();
+                foreach (var kvp in CustomProperties.GetAll())
+                {
+                    clone.CustomProperties.SetProperty(kvp.Key, kvp.Value);
+                }
+            }
+            
             return clone;
         }
         object ICloneable.Clone() => Clone();
