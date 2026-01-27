@@ -1100,7 +1100,7 @@ namespace TombEditor
                 if (moveables.Any() && !statics.Any())
                 {
                     // Batch edit moveables
-                    var window = new TombEditor.Windows.BatchPropertyEditorWindow(moveables, "Moveable");
+                    var window = new TombEditor.Windows.BatchPropertyEditorWindow(moveables.Cast<ItemInstance>().ToList(), true);
                     if (window.ShowDialog() == true)
                     {
                         foreach (var obj in moveables)
@@ -1111,7 +1111,7 @@ namespace TombEditor
                 else if (statics.Any() && !moveables.Any())
                 {
                     // Batch edit statics
-                    var window = new TombEditor.Windows.BatchPropertyEditorWindow(statics, "Static");
+                    var window = new TombEditor.Windows.BatchPropertyEditorWindow(statics.Cast<ItemInstance>().ToList(), true);
                     if (window.ShowDialog() == true)
                     {
                         foreach (var obj in statics)

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using TombLib.IO;
+using TombLib.LevelData.Properties;
 using TombLib.Utils;
 using TombLib.Wad;
 using TombLib.LevelData.VisualScripting;
