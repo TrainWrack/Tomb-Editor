@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using TombLib.IO;
 using TombLib.LevelData;
+using TombLib.LevelData.Properties;
 using TombLib.Utils;
 using TombLib.Wad.Catalog;
 
@@ -641,7 +642,12 @@ namespace TombLib.Wad
 
                 chunkIO.ReadChunks((id2, chunkSize2) =>
                 {
-                    if (id2 == Wad2Chunks.Mesh)
+                    if (id2 == Wad2Chunks.MoveableProperties)
+                    {
+                        // Load custom properties for TombEngine WAD2 files
+                        ReadCustomProperties(chunkIO, mov.CustomProperties);
+                    }
+                    else if (id2 == Wad2Chunks.Mesh)
                     {
                         var mesh = LoadMesh(chunkIO, chunkSize2, textures);
                         meshes.Add(mesh);
@@ -1030,6 +1036,21 @@ namespace TombLib.Wad
             });
 
             return true;
+        }
+
+        private static void ReadCustomProperties(ChunkReader chunkIO, PropertyCollection properties)
+        {
+            if (properties == null)
+                return;
+
+            ushort propertyCount = LEB128.ReadUShort(chunkIO.Raw);
+            
+            for (int i = 0; i < propertyCount; i++)
+            {
+                string key = chunkIO.Raw.ReadStringUTF8();
+                string value = chunkIO.Raw.ReadStringUTF8();
+                properties.SetProperty(key, value);
+            }
         }
     }
 }
