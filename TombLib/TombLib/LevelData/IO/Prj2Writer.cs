@@ -955,16 +955,17 @@ namespace TombLib.LevelData.IO
             });
         }
 
-        private static void WriteCustomProperties(BinaryWriterEx writer, PropertyCollection properties)
+        private static void WriteCustomProperties(BinaryWriterFast writer, PropertyCollection properties)
         {
-            if (properties == null || properties.Properties.Count == 0)
+            var allProperties = properties?.GetAll();
+            if (allProperties == null || allProperties.Count == 0)
             {
                 writer.Write((ushort)0); // Property count
                 return;
             }
 
-            writer.Write((ushort)properties.Properties.Count);
-            foreach (var kvp in properties.Properties)
+            writer.Write((ushort)allProperties.Count);
+            foreach (var kvp in allProperties)
             {
                 writer.WriteStringUTF8(kvp.Key);
                 writer.WriteStringUTF8(kvp.Value?.ToString() ?? "");
