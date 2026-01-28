@@ -20,7 +20,7 @@ namespace WadTool.Controls.ContextMenus
             var wad = tool.DestinationWad ?? tool.SourceWad;
             if (wad != null && wad.GameVersion == TRVersion.Game.TombEngine)
             {
-                Items.Add(new ToolStripMenuItem("Edit Properties", Properties.Resources.properties_16, (o, e) =>
+                Items.Add(new ToolStripMenuItem("Edit Properties", Properties.Resources.general_edit_16, (o, e) =>
                 {
                     EditStaticProperties(tool, staticId);
                 }));
@@ -37,7 +37,7 @@ namespace WadTool.Controls.ContextMenus
             var staticMesh = wad.Statics[staticId];
 
             // Load property definitions from XML (statics use shared XML file)
-            var propertySet = PropertyManager.Instance.GetStaticProperties();
+            var propertySet = TombLib.LevelData.Properties.PropertyManager.Instance.GetStaticProperties();
             if (propertySet == null || propertySet.Properties.Count == 0)
             {
                 MessageBox.Show(
@@ -54,7 +54,7 @@ namespace WadTool.Controls.ContextMenus
             var wadStaticWrapper = new WadStaticWrapper(staticMesh, staticId, wad.GameVersion);
 
             // Open property editor window in Wadtool context (resets to XML defaults)
-            var window = new PropertyEditorWindow(wadStaticWrapper, propertySet, true, PropertyEditorContext.Wadtool);
+            var window = new PropertyEditorWindow(wadStaticWrapper, true, PropertyEditorContext.Wadtool);
             if (window.ShowDialog() == true)
             {
                 // Properties were updated in the staticMesh.CustomProperties
