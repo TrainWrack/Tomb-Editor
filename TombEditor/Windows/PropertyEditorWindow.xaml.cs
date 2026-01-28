@@ -130,9 +130,11 @@ namespace TombEditor.Windows
             {
                 TitleText.Text = $"Batch Edit {instances.Count} Moveables";
                 TitleText.Style = (Style)TryFindResource("PropertyNameLabel");
+                TitleText.Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground") ?? System.Windows.Media.Brushes.LightGray;
                 SubtitleText.Text = "Changes will be applied to all selected moveables";
                 SubtitleText.Style = (Style)TryFindResource("PropertyNameLabel");
-                
+                SubtitleText.Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground") ?? System.Windows.Media.Brushes.LightGray;
+
                 var propertySet = PropertyManager.Instance.GetMoveableProperties(moveable.WadObjectId.ToString(TRVersion.Game.TombEngine));
                 _propertyDefinitions = propertySet.Properties;
             }
@@ -140,9 +142,11 @@ namespace TombEditor.Windows
             {
                 TitleText.Text = $"Batch Edit {instances.Count} Statics";
                 TitleText.Style = (Style)TryFindResource("PropertyNameLabel");
+                TitleText.Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground") ?? System.Windows.Media.Brushes.LightGray;
                 SubtitleText.Text = "Changes will be applied to all selected statics";
                 SubtitleText.Style = (Style)TryFindResource("PropertyNameLabel");
-                
+                SubtitleText.Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground") ?? System.Windows.Media.Brushes.LightGray;
+
                 var propertySet = PropertyManager.Instance.GetStaticProperties();
                 _propertyDefinitions = propertySet.Properties;
             }
