@@ -86,34 +86,64 @@ namespace TombLib.LevelData.Properties
 
         /// <summary>
         /// Gets property definitions for a specific moveable
+        /// Merges object-specific properties with Default.xml base properties
         /// </summary>
         public MoveablePropertySet GetMoveableProperties(string moveableName)
         {
+            MoveablePropertySet objectSpecificProperties = null;
+            
             // Try exact match first
             if (_moveableProperties.ContainsKey(moveableName))
-                return _moveableProperties[moveableName];
+                objectSpecificProperties = _moveableProperties[moveableName];
 
             // Try to extract just the name part if the input has format like "(123) HORSEMAN" or "Uncertain game version - (123) HORSEMAN"
             // This handles WadObjectId.ToString() output
-            string simpleName = moveableName;
-            
-            // Remove "Uncertain game version - " prefix if present
-            if (simpleName.Contains("Uncertain game version - "))
-                simpleName = simpleName.Replace("Uncertain game version - ", "");
-            
-            // Extract name after "(id) " pattern
-            int lastParenIndex = simpleName.LastIndexOf(')');
-            if (lastParenIndex >= 0 && lastParenIndex < simpleName.Length - 1)
+            if (objectSpecificProperties == null)
             {
-                simpleName = simpleName.Substring(lastParenIndex + 1).Trim();
+                string simpleName = moveableName;
                 
-                // Try lookup with simplified name
-                if (_moveableProperties.ContainsKey(simpleName))
-                    return _moveableProperties[simpleName];
+                // Remove "Uncertain game version - " prefix if present
+                if (simpleName.Contains("Uncertain game version - "))
+                    simpleName = simpleName.Replace("Uncertain game version - ", "");
+                
+                // Extract name after "(id) " pattern
+                int lastParenIndex = simpleName.LastIndexOf(')');
+                if (lastParenIndex >= 0 && lastParenIndex < simpleName.Length - 1)
+                {
+                    simpleName = simpleName.Substring(lastParenIndex + 1).Trim();
+                    
+                    // Try lookup with simplified name
+                    if (_moveableProperties.ContainsKey(simpleName))
+                        objectSpecificProperties = _moveableProperties[simpleName];
+                }
             }
 
-            // Return default moveable properties (HP and OCB)
-            return GetDefaultMoveableProperties();
+            // If no object-specific properties found, return defaults
+            if (objectSpecificProperties == null)
+                return GetDefaultMoveableProperties();
+
+            // Merge object-specific properties with Default.xml
+            // Default properties (OCB, HP) come first, then object-specific properties
+            var defaultProperties = GetDefaultMoveableProperties();
+            var mergedProperties = new MoveablePropertySet();
+            
+            // Add all default properties first
+            foreach (var prop in defaultProperties.Properties)
+            {
+                mergedProperties.Properties.Add(prop);
+            }
+            
+            // Add object-specific properties (skip if already in defaults to avoid duplicates)
+            var defaultNames = new HashSet<string>(defaultProperties.Properties.Select(p => p.Name));
+            foreach (var prop in objectSpecificProperties.Properties)
+            {
+                if (!defaultNames.Contains(prop.Name))
+                {
+                    mergedProperties.Properties.Add(prop);
+                }
+            }
+            
+            return mergedProperties;
         }
 
         /// <summary>
