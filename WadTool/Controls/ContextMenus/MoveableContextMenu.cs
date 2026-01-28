@@ -27,7 +27,7 @@ namespace WadTool.Controls.ContextMenus
             if (wad != null && wad.GameVersion == TRVersion.Game.TombEngine)
             {
                 Items.Add(new ToolStripSeparator());
-                Items.Add(new ToolStripMenuItem("Edit Properties", Properties.Resources.general_edit_16, (o, e) =>
+                Items.Add(new ToolStripMenuItem("Edit Properties", Properties.Resources.edit_16, (o, e) =>
                 {
                     EditMoveableProperties(tool, moveableId);
                 }));
@@ -44,7 +44,7 @@ namespace WadTool.Controls.ContextMenus
             var moveable = wad.Moveables[moveableId];
 
             // Load property definitions from XML
-            var propertySet = TombLib.LevelData.Properties.PropertyManager.GetMoveableProperties(moveableId.ToString(wad.GameVersion));
+            var propertySet = TombLib.LevelData.Properties.PropertyManager.Instance.GetMoveableProperties(moveableId.ToString(wad.GameVersion));
             if (propertySet == null || propertySet.Properties.Count == 0)
             {
                 MessageBox.Show(

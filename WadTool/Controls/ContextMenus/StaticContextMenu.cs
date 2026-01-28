@@ -20,7 +20,7 @@ namespace WadTool.Controls.ContextMenus
             var wad = tool.DestinationWad ?? tool.SourceWad;
             if (wad != null && wad.GameVersion == TRVersion.Game.TombEngine)
             {
-                Items.Add(new ToolStripMenuItem("Edit Properties", Properties.Resources.general_edit_16, (o, e) =>
+                Items.Add(new ToolStripMenuItem("Edit Properties", Properties.Resources.edit_16, (o, e) =>
                 {
                     EditStaticProperties(tool, staticId);
                 }));
