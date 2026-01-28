@@ -534,7 +534,18 @@ namespace TombLib.Wad
                 foreach (var kvp in props)
                 {
                     chunkIO.Raw.WriteStringUTF8(kvp.Key);
-                    chunkIO.Raw.WriteStringUTF8(kvp.Value?.ToString() ?? "");
+                    
+                    // Handle List<string> for checkbox properties
+                    if (kvp.Value is List<string> list)
+                    {
+                        // Serialize as JSON array format: ["item1","item2"]
+                        var jsonArray = "[" + string.Join(",", list.Select(item => "\"" + item.Replace("\"", "\\\"") + "\"")) + "]";
+                        chunkIO.Raw.WriteStringUTF8(jsonArray);
+                    }
+                    else
+                    {
+                        chunkIO.Raw.WriteStringUTF8(kvp.Value?.ToString() ?? "");
+                    }
                 }
             });
         }

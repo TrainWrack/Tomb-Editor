@@ -1054,7 +1054,42 @@ namespace TombLib.Wad
             {
                 string key = chunkIO.Raw.ReadStringUTF8();
                 string value = chunkIO.Raw.ReadStringUTF8();
-                properties.SetProperty(key, value);
+                
+                // Check if value is a JSON array (for checkbox properties)
+                if (value.StartsWith("[") && value.EndsWith("]"))
+                {
+                    try
+                    {
+                        // Parse simple JSON array: ["item1","item2"]
+                        var list = new List<string>();
+                        var content = value.Substring(1, value.Length - 2); // Remove [ and ]
+                        if (!string.IsNullOrEmpty(content))
+                        {
+                            // Split by comma, but handle escaped quotes
+                            var items = System.Text.RegularExpressions.Regex.Split(content, ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                            foreach (var item in items)
+                            {
+                                var trimmed = item.Trim();
+                                if (trimmed.StartsWith("\"") && trimmed.EndsWith("\""))
+                                {
+                                    // Remove quotes and unescape
+                                    var unquoted = trimmed.Substring(1, trimmed.Length - 2).Replace("\\\"", "\"");
+                                    list.Add(unquoted);
+                                }
+                            }
+                        }
+                        properties.SetProperty(key, list);
+                    }
+                    catch
+                    {
+                        // If parsing fails, store as string
+                        properties.SetProperty(key, value);
+                    }
+                }
+                else
+                {
+                    properties.SetProperty(key, value);
+                }
             }
         }
     }

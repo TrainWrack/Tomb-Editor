@@ -792,26 +792,41 @@ namespace TombEditor.Windows
         /// </summary>
         private object GetPropertyValueFromInstance(ItemInstance instance, string propertyName)
         {
+            PropertyCollection properties = null;
+            
             if (instance is MoveableInstance moveable)
-            {
-                // Get all properties from CustomProperties for consistency
-                // Try to determine the expected type based on property name
-                if (propertyName == "HP" || propertyName == "OCB")
-                    return moveable.CustomProperties.GetProperty<int>(propertyName, propertyName == "HP" ? 100 : 0);
-                else
-                    return moveable.CustomProperties.GetProperty<string>(propertyName, "");
-            }
+                properties = moveable.CustomProperties;
             else if (instance is StaticInstance staticMesh)
+                properties = staticMesh.CustomProperties;
+            
+            if (properties == null)
+                return null;
+            
+            // Get the raw value from CustomProperties
+            var value = properties.GetProperty<object>(propertyName, null);
+            
+            // If it's already the correct type (List<string>, int, etc.), return it
+            if (value is List<string>)
+                return value;
+            
+            // For HP and OCB, try to convert to int
+            if (propertyName == "HP" || propertyName == "OCB")
             {
-                // Get all properties from CustomProperties for consistency
-                // Try to determine the expected type based on property name
-                if (propertyName == "HP" || propertyName == "OCB")
-                    return staticMesh.CustomProperties.GetProperty<int>(propertyName, propertyName == "HP" ? 100 : 0);
-                else
-                    return staticMesh.CustomProperties.GetProperty<string>(propertyName, "");
+                if (value == null)
+                    return propertyName == "HP" ? 100 : 0;
+                
+                if (value is int)
+                    return value;
+                
+                // Try to parse from string
+                if (int.TryParse(value.ToString(), out int intValue))
+                    return intValue;
+                
+                return propertyName == "HP" ? 100 : 0;
             }
-
-            return null;
+            
+            // For other types, return as is or convert to string
+            return value ?? "";
         }
 
         /// <summary>
