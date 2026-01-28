@@ -57,9 +57,21 @@ namespace TombEditor.Windows
             if (_context == PropertyEditorContext.TombEditor)
             {
                 _savedWad2Properties = new PropertyCollection();
-                foreach (var kvp in instance.CustomProperties.GetAll())
+                
+                // Access CustomProperties from the appropriate derived type
+                if (instance is MoveableInstance moveableInst)
                 {
-                    _savedWad2Properties.SetProperty(kvp.Key, kvp.Value);
+                    foreach (var kvp in moveableInst.CustomProperties.GetAll())
+                    {
+                        _savedWad2Properties.SetProperty(kvp.Key, kvp.Value);
+                    }
+                }
+                else if (instance is StaticInstance staticInst)
+                {
+                    foreach (var kvp in staticInst.CustomProperties.GetAll())
+                    {
+                        _savedWad2Properties.SetProperty(kvp.Key, kvp.Value);
+                    }
                 }
             }
 
@@ -681,8 +693,8 @@ namespace TombEditor.Windows
                     return false;
 
                 case PropertyType.Dropdown:
-                    if (control is ComboBox cb)
-                        return cb.SelectedItem?.ToString() ?? "";
+                    if (control is ComboBox dropdown)
+                        return dropdown.SelectedItem?.ToString() ?? "";
                     return "";
 
                 case PropertyType.Checkbox:
@@ -900,10 +912,10 @@ namespace TombEditor.Windows
                     break;
 
                 case PropertyType.Dropdown:
-                    if (control is ComboBox cb && !string.IsNullOrEmpty(propDef.Default))
+                    if (control is ComboBox dropdownBox && !string.IsNullOrEmpty(propDef.Default))
                     {
-                        if (cb.Items.Contains(propDef.Default))
-                            cb.SelectedItem = propDef.Default;
+                        if (dropdownBox.Items.Contains(propDef.Default))
+                            dropdownBox.SelectedItem = propDef.Default;
                     }
                     break;
 

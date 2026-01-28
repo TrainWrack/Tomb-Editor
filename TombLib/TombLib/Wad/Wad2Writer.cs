@@ -534,7 +534,7 @@ namespace TombLib.Wad
                 foreach (var kvp in props)
                 {
                     chunkIO.Raw.WriteStringUTF8(kvp.Key);
-                    chunkIO.Raw.WriteStringUTF8(kvp.Value);
+                    chunkIO.Raw.WriteStringUTF8(kvp.Value?.ToString() ?? "");
                 }
             });
         }

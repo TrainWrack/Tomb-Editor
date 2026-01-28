@@ -65,20 +65,21 @@ namespace WadTool.Controls.ContextMenus
     }
 
     // Wrapper class to make WadStatic compatible with PropertyEditorWindow
-    internal class WadStaticWrapper : ItemInstance
+    internal class WadStaticWrapper : StaticInstance
     {
-        private WadStatic _static;
         private WadStaticId _id;
         private TRVersion.Game _gameVersion;
 
         public WadStaticWrapper(WadStatic staticMesh, WadStaticId id, TRVersion.Game gameVersion)
             : base()
         {
-            _static = staticMesh;
             _id = id;
             _gameVersion = gameVersion;
+            WadObjectId = id;
             CustomProperties = staticMesh.CustomProperties;
         }
+
+        public override ItemType ItemType => new ItemType(_id);
 
         public override string ToString()
         {

@@ -83,6 +83,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DarkUI\DarkUI\DarkUI.csproj" />
+    <ProjectReference Include="..\TombEditor\TombEditor.csproj" />
     <ProjectReference Include="..\TombLib\TombLib.Forms\TombLib.Forms.csproj" />
     <ProjectReference Include="..\TombLib\TombLib.Rendering\TombLib.Rendering.csproj" />
     <ProjectReference Include="..\TombLib\TombLib\TombLib.csproj" />

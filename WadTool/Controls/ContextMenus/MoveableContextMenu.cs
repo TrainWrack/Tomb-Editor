@@ -72,20 +72,21 @@ namespace WadTool.Controls.ContextMenus
     }
 
     // Wrapper class to make WadMoveable compatible with PropertyEditorWindow
-    internal class WadMoveableWrapper : ItemInstance
+    internal class WadMoveableWrapper : MoveableInstance
     {
-        private WadMoveable _moveable;
         private WadMoveableId _id;
         private TRVersion.Game _gameVersion;
 
         public WadMoveableWrapper(WadMoveable moveable, WadMoveableId id, TRVersion.Game gameVersion)
             : base()
         {
-            _moveable = moveable;
             _id = id;
             _gameVersion = gameVersion;
+            WadObjectId = id;
             CustomProperties = moveable.CustomProperties;
         }
+
+        public override ItemType ItemType => new ItemType(_id);
 
         public override string ToString()
         {

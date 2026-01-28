@@ -43,11 +43,9 @@ namespace TombLib.LevelData
 
         public static ItemInstance FromItemType(Level level, ItemType item)
         {
-            ItemInstance instance;
-            
             if (item.IsStatic)
             {
-                instance = new StaticInstance() { WadObjectId = item.StaticId };
+                var instance = new StaticInstance() { WadObjectId = item.StaticId };
                 
                 // Copy CustomProperties from WAD2 file if they exist
                 if (level?.Settings != null)
@@ -61,10 +59,12 @@ namespace TombLib.LevelData
                         }
                     }
                 }
+                
+                return instance;
             }
             else
             {
-                instance = new MoveableInstance() { WadObjectId = item.MoveableId };
+                var instance = new MoveableInstance() { WadObjectId = item.MoveableId };
                 
                 // Copy CustomProperties from WAD2 file if they exist
                 if (level?.Settings != null)
@@ -78,9 +78,9 @@ namespace TombLib.LevelData
                         }
                     }
                 }
+                
+                return instance;
             }
-            
-            return instance;
         }
 
         public string PrimaryAttribDesc => "Object ID";
