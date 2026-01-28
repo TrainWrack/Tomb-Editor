@@ -129,10 +129,15 @@ namespace TombLib.LevelData.Properties
         }
 
         /// <summary>
-        /// Returns default mandatory properties for moveables
+        /// Returns default mandatory properties for moveables from Default.xml
         /// </summary>
-        public static MoveablePropertySet GetDefaultMoveableProperties()
+        public MoveablePropertySet GetDefaultMoveableProperties()
         {
+            // Try to load Default.xml if it exists
+            if (_moveableProperties.ContainsKey("Default"))
+                return _moveableProperties["Default"];
+
+            // If Default.xml doesn't exist, return hardcoded fallback
             var propertySet = new MoveablePropertySet();
             
             propertySet.Properties.Add(new PropertyDefinition
@@ -159,10 +164,15 @@ namespace TombLib.LevelData.Properties
         }
 
         /// <summary>
-        /// Returns default mandatory properties for statics
+        /// Returns default mandatory properties for statics from StaticProperties.xml
         /// </summary>
-        public static StaticPropertySet GetDefaultStaticProperties()
+        public StaticPropertySet GetDefaultStaticProperties()
         {
+            // If StaticProperties.xml was loaded, return it
+            if (_staticProperties != null)
+                return _staticProperties;
+
+            // If StaticProperties.xml doesn't exist, return hardcoded fallback
             var propertySet = new StaticPropertySet();
 
             propertySet.Properties.Add(new PropertyDefinition
