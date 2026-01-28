@@ -729,9 +729,11 @@ namespace WadTool
             }
 
             // Get selected moveable
-            var selectedId = treeDestWad.SelectedWadObjectIds.FirstOrDefault() as WadMoveableId;
-            if (selectedId == null)
+            var firstSelected = treeDestWad.SelectedWadObjectIds.FirstOrDefault();
+            if (!(firstSelected is WadMoveableId))
                 return;
+            
+            var selectedId = (WadMoveableId)firstSelected;
 
             WadMoveable moveable;
             if (!_tool.DestinationWad.Moveables.TryGetValue(selectedId, out moveable))
@@ -739,7 +741,7 @@ namespace WadTool
 
             // Check if property file exists
             var propertySet = TombLib.LevelData.Properties.PropertyManager.Instance.GetMoveableProperties(selectedId.ToString(_tool.DestinationWad.GameVersion));
-            if (propertySet == null || propertySet.Count == 0)
+            if (propertySet == null || propertySet.Properties.Count == 0)
             {
                 DarkMessageBox.Show(this, "No property XML file is defined for this moveable.", 
                     "No Properties", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -747,11 +749,11 @@ namespace WadTool
             }
 
             // Create wrapper and show property editor
-            var wadMoveableWrapper = new WadTool.Controls.ContextMenus.WadMoveableWrapper(moveable, selectedId);
+            var wadMoveableWrapper = new WadTool.Controls.ContextMenus.WadMoveableWrapper(moveable, selectedId, _tool.DestinationWad.GameVersion);
             var window = new TombEditor.Windows.PropertyEditorWindow(wadMoveableWrapper, true, 
                 TombEditor.Windows.PropertyEditorContext.Wadtool);
             
-            if (window.ShowDialog() == DialogResult.OK)
+            if (window.ShowDialog() == true)
             {
                 _tool.ToggleUnsavedChanges(true);
             }
@@ -768,9 +770,11 @@ namespace WadTool
             }
 
             // Get selected static
-            var selectedId = treeDestWad.SelectedWadObjectIds.FirstOrDefault() as WadStaticId;
-            if (selectedId == null)
+            var firstSelected = treeDestWad.SelectedWadObjectIds.FirstOrDefault();
+            if (!(firstSelected is WadStaticId))
                 return;
+            
+            var selectedId = (WadStaticId)firstSelected;
 
             WadStatic wadStatic;
             if (!_tool.DestinationWad.Statics.TryGetValue(selectedId, out wadStatic))
@@ -778,7 +782,7 @@ namespace WadTool
 
             // Check if property file exists
             var propertySet = TombLib.LevelData.Properties.PropertyManager.Instance.GetStaticProperties();
-            if (propertySet == null || propertySet.Count == 0)
+            if (propertySet == null || propertySet.Properties.Count == 0)
             {
                 DarkMessageBox.Show(this, "No property XML file is defined for statics.", 
                     "No Properties", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -786,11 +790,11 @@ namespace WadTool
             }
 
             // Create wrapper and show property editor
-            var wadStaticWrapper = new WadTool.Controls.ContextMenus.WadStaticWrapper(wadStatic, selectedId);
+            var wadStaticWrapper = new WadTool.Controls.ContextMenus.WadStaticWrapper(wadStatic, selectedId, _tool.DestinationWad.GameVersion);
             var window = new TombEditor.Windows.PropertyEditorWindow(wadStaticWrapper, true, 
                 TombEditor.Windows.PropertyEditorContext.Wadtool);
             
-            if (window.ShowDialog() == DialogResult.OK)
+            if (window.ShowDialog() == true)
             {
                 _tool.ToggleUnsavedChanges(true);
             }
