@@ -55,6 +55,10 @@ namespace WadTool
             var editPropertiesStatic = new ToolStripMenuItem("Edit Properties", Properties.Resources.edit_16, EditPropertiesStatic_Click);
             cmStatics.Items.Insert(0, editPropertiesStatic);
             cmStatics.Items.Insert(1, new ToolStripSeparator());
+
+            // Initialize PropertyManager with properties directory
+            string propertiesPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "Resources", "Properties");
+            TombLib.LevelData.Properties.PropertyManager.Instance.SetPropertiesDirectory(propertiesPath);
         }
 
         private class InitEvent : IEditorEvent { };
