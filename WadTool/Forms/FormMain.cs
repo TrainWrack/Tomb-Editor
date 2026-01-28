@@ -751,7 +751,7 @@ namespace WadTool
             // Create wrapper and show property editor
             var wadMoveableWrapper = new WadTool.Controls.ContextMenus.WadMoveableWrapper(moveable, selectedId, _tool.DestinationWad.GameVersion);
             var window = new TombEditor.Windows.PropertyEditorWindow(wadMoveableWrapper, true, 
-                TombEditor.Windows.PropertyEditorContext.Wadtool);
+                TombEditor.Windows.PropertyEditorContext.Wadtool, _tool.DestinationWad.GameVersion);
             
             if (window.ShowDialog() == true)
             {
@@ -792,7 +792,7 @@ namespace WadTool
             // Create wrapper and show property editor
             var wadStaticWrapper = new WadTool.Controls.ContextMenus.WadStaticWrapper(wadStatic, selectedId, _tool.DestinationWad.GameVersion);
             var window = new TombEditor.Windows.PropertyEditorWindow(wadStaticWrapper, true, 
-                TombEditor.Windows.PropertyEditorContext.Wadtool);
+                TombEditor.Windows.PropertyEditorContext.Wadtool, _tool.DestinationWad.GameVersion);
             
             if (window.ShowDialog() == true)
             {

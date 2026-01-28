@@ -38,15 +38,17 @@ namespace TombEditor.Windows
         private readonly bool _isTombEngine;
         private readonly PropertyEditorContext _context;
         private readonly PropertyCollection _savedWad2Properties; // Stores original WAD2 properties for TombEditor context
+        private readonly TRVersion.Game _gameVersion;
 
         public bool PropertiesChanged { get; private set; }
 
         // Constructor for single object editing
-        public PropertyEditorWindow(ItemInstance instance, bool isTombEngine, PropertyEditorContext context = PropertyEditorContext.TombEditor)
+        public PropertyEditorWindow(ItemInstance instance, bool isTombEngine, PropertyEditorContext context = PropertyEditorContext.TombEditor, TRVersion.Game? gameVersion = null)
         {
             InitializeComponent();
             _instance = instance;
             _context = context;
+            _gameVersion = gameVersion ?? TRVersion.Game.TombEngine;
             _instances = new List<ItemInstance> { instance };
             _isBatchMode = false;
             _isTombEngine = isTombEngine;
@@ -80,17 +82,17 @@ namespace TombEditor.Windows
             {
                 TitleText.Text = "Moveable Properties";
                 TitleText.Style = (Style)TryFindResource("PropertyNameLabel");
-                SubtitleText.Text = $"Object: {moveable.WadObjectId.ToString(TRVersion.Game.TombEngine)}";
+                SubtitleText.Text = $"Object: {moveable.WadObjectId.ToString(_gameVersion)}";
                 SubtitleText.Style = (Style)TryFindResource("PropertyNameLabel");
                 
-                var propertySet = PropertyManager.Instance.GetMoveableProperties(moveable.WadObjectId.ToString(TRVersion.Game.TombEngine));
+                var propertySet = PropertyManager.Instance.GetMoveableProperties(moveable.WadObjectId.ToString(_gameVersion));
                 _propertyDefinitions = propertySet.Properties;
             }
             else if (instance is StaticInstance staticMesh)
             {
                 TitleText.Text = "Static Properties";
                 TitleText.Style = (Style)TryFindResource("PropertyNameLabel");
-                SubtitleText.Text = $"Object: {staticMesh.WadObjectId.ToString(TRVersion.Game.TombEngine)}";
+                SubtitleText.Text = $"Object: {staticMesh.WadObjectId.ToString(_gameVersion)}";
                 SubtitleText.Style = (Style)TryFindResource("PropertyNameLabel");
                 
                 var propertySet = PropertyManager.Instance.GetStaticProperties();
@@ -106,7 +108,7 @@ namespace TombEditor.Windows
         }
 
         // Constructor for batch editing multiple objects
-        public PropertyEditorWindow(List<ItemInstance> instances, bool isTombEngine, PropertyEditorContext context = PropertyEditorContext.TombEditor)
+        public PropertyEditorWindow(List<ItemInstance> instances, bool isTombEngine, PropertyEditorContext context = PropertyEditorContext.TombEditor, TRVersion.Game? gameVersion = null)
         {
             if (instances == null || instances.Count == 0)
                 throw new ArgumentException("No instances provided for batch editing");
@@ -122,6 +124,7 @@ namespace TombEditor.Windows
             _isBatchMode = true;
             _isTombEngine = isTombEngine;
             _context = context;
+            _gameVersion = gameVersion ?? TRVersion.Game.TombEngine;
             _propertyControls = new Dictionary<string, FrameworkElement>();
             PropertiesChanged = false;
 
@@ -135,7 +138,7 @@ namespace TombEditor.Windows
                 SubtitleText.Style = (Style)TryFindResource("PropertyNameLabel");
                 SubtitleText.Foreground = (System.Windows.Media.Brush)TryFindResource("Brush_Foreground") ?? System.Windows.Media.Brushes.LightGray;
 
-                var propertySet = PropertyManager.Instance.GetMoveableProperties(moveable.WadObjectId.ToString(TRVersion.Game.TombEngine));
+                var propertySet = PropertyManager.Instance.GetMoveableProperties(moveable.WadObjectId.ToString(_gameVersion));
                 _propertyDefinitions = propertySet.Properties;
             }
             else if (instances[0] is StaticInstance)
