@@ -46,6 +46,15 @@ namespace WadTool
 
             // Load recent files
             RefreshRecentWadsList();
+
+            // Add "Edit Properties" menu items to context menus
+            var editPropertiesMoveable = new ToolStripMenuItem("Edit Properties", Properties.Resources.edit_16, EditPropertiesMoveable_Click);
+            contextMenuMoveableItem.Items.Insert(0, editPropertiesMoveable);
+            contextMenuMoveableItem.Items.Insert(1, new ToolStripSeparator());
+
+            var editPropertiesStatic = new ToolStripMenuItem("Edit Properties", Properties.Resources.edit_16, EditPropertiesStatic_Click);
+            cmStatics.Items.Insert(0, editPropertiesStatic);
+            cmStatics.Items.Insert(1, new ToolStripSeparator());
         }
 
         private class InitEvent : IEditorEvent { };
@@ -706,6 +715,84 @@ namespace WadTool
                 ))
             {
                 form.ShowDialog();
+            }
+        }
+
+        private void EditPropertiesMoveable_Click(object sender, EventArgs e)
+        {
+            // Check if TombEngine WAD
+            if (_tool.DestinationWad.GameVersion != TRVersion.Game.TombEngine)
+            {
+                DarkMessageBox.Show(this, "Property editing is only available for TombEngine WAD files.", 
+                    "Not a TombEngine WAD", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // Get selected moveable
+            var selectedId = treeDestWad.SelectedWadObjectIds.FirstOrDefault() as WadMoveableId;
+            if (selectedId == null)
+                return;
+
+            WadMoveable moveable;
+            if (!_tool.DestinationWad.Moveables.TryGetValue(selectedId, out moveable))
+                return;
+
+            // Check if property file exists
+            var propertySet = TombLib.LevelData.Properties.PropertyManager.Instance.GetMoveableProperties(selectedId.ToString(_tool.DestinationWad.GameVersion));
+            if (propertySet == null || propertySet.Count == 0)
+            {
+                DarkMessageBox.Show(this, "No property XML file is defined for this moveable.", 
+                    "No Properties", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // Create wrapper and show property editor
+            var wadMoveableWrapper = new WadTool.Controls.ContextMenus.WadMoveableWrapper(moveable, selectedId);
+            var window = new TombEditor.Windows.PropertyEditorWindow(wadMoveableWrapper, true, 
+                TombEditor.Windows.PropertyEditorContext.Wadtool);
+            
+            if (window.ShowDialog() == DialogResult.OK)
+            {
+                _tool.ToggleUnsavedChanges(true);
+            }
+        }
+
+        private void EditPropertiesStatic_Click(object sender, EventArgs e)
+        {
+            // Check if TombEngine WAD
+            if (_tool.DestinationWad.GameVersion != TRVersion.Game.TombEngine)
+            {
+                DarkMessageBox.Show(this, "Property editing is only available for TombEngine WAD files.", 
+                    "Not a TombEngine WAD", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // Get selected static
+            var selectedId = treeDestWad.SelectedWadObjectIds.FirstOrDefault() as WadStaticId;
+            if (selectedId == null)
+                return;
+
+            WadStatic wadStatic;
+            if (!_tool.DestinationWad.Statics.TryGetValue(selectedId, out wadStatic))
+                return;
+
+            // Check if property file exists
+            var propertySet = TombLib.LevelData.Properties.PropertyManager.Instance.GetStaticProperties();
+            if (propertySet == null || propertySet.Count == 0)
+            {
+                DarkMessageBox.Show(this, "No property XML file is defined for statics.", 
+                    "No Properties", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // Create wrapper and show property editor
+            var wadStaticWrapper = new WadTool.Controls.ContextMenus.WadStaticWrapper(wadStatic, selectedId);
+            var window = new TombEditor.Windows.PropertyEditorWindow(wadStaticWrapper, true, 
+                TombEditor.Windows.PropertyEditorContext.Wadtool);
+            
+            if (window.ShowDialog() == DialogResult.OK)
+            {
+                _tool.ToggleUnsavedChanges(true);
             }
         }
     }
