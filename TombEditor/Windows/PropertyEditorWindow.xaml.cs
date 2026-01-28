@@ -738,35 +738,15 @@ namespace TombEditor.Windows
         {
             if (instance is MoveableInstance moveable)
             {
-                if (propertyName == "HP")
-                    moveable.CustomProperties.SetProperty("HP", value);
-                else if (propertyName == "OCB" && value is int ocb)
-                {
-                    // Clamp to short range to prevent overflow
-                    if (ocb > short.MaxValue)
-                        ocb = short.MaxValue;
-                    else if (ocb < short.MinValue)
-                        ocb = short.MinValue;
-                    moveable.Ocb = (short)ocb;
-                }
-                else
-                    moveable.CustomProperties.SetProperty(propertyName, value);
+                // Store all properties in CustomProperties for consistency
+                // OCB and HP are now treated the same as other properties
+                moveable.CustomProperties.SetProperty(propertyName, value);
             }
             else if (instance is StaticInstance staticMesh)
             {
-                if (propertyName == "HP")
-                    staticMesh.CustomProperties.SetProperty("HP", value);
-                else if (propertyName == "OCB" && value is int ocb)
-                {
-                    // Clamp to short range to prevent overflow
-                    if (ocb > short.MaxValue)
-                        ocb = short.MaxValue;
-                    else if (ocb < short.MinValue)
-                        ocb = short.MinValue;
-                    staticMesh.Ocb = (short)ocb;
-                }
-                else
-                    staticMesh.CustomProperties.SetProperty(propertyName, value);
+                // Store all properties in CustomProperties for consistency
+                // OCB and HP are now treated the same as other properties
+                staticMesh.CustomProperties.SetProperty(propertyName, value);
             }
         }
 
@@ -811,19 +791,19 @@ namespace TombEditor.Windows
         {
             if (instance is MoveableInstance moveable)
             {
-                if (propertyName == "HP")
-                    return moveable.CustomProperties.GetProperty<int>("HP", 100);
-                else if (propertyName == "OCB")
-                    return (int)moveable.Ocb;
+                // Get all properties from CustomProperties for consistency
+                // Try to determine the expected type based on property name
+                if (propertyName == "HP" || propertyName == "OCB")
+                    return moveable.CustomProperties.GetProperty<int>(propertyName, propertyName == "HP" ? 100 : 0);
                 else
                     return moveable.CustomProperties.GetProperty<string>(propertyName, "");
             }
             else if (instance is StaticInstance staticMesh)
             {
-                if (propertyName == "HP")
-                    return staticMesh.CustomProperties.GetProperty<int>("HP", 100);
-                else if (propertyName == "OCB")
-                    return (int)staticMesh.Ocb;
+                // Get all properties from CustomProperties for consistency
+                // Try to determine the expected type based on property name
+                if (propertyName == "HP" || propertyName == "OCB")
+                    return staticMesh.CustomProperties.GetProperty<int>(propertyName, propertyName == "HP" ? 100 : 0);
                 else
                     return staticMesh.CustomProperties.GetProperty<string>(propertyName, "");
             }
