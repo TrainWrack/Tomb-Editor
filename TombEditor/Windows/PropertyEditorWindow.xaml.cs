@@ -849,7 +849,9 @@ namespace TombEditor.Windows
                         var control = _propertyControls[propDef.Name];
                         
                         // Check if WAD2 had a value for this property
-                        var savedValue = _savedWad2Properties.GetProperty<string>(propDef.Name, null);
+                        // Get as object (actual stored type) then convert to string
+                        var savedValueObj = _savedWad2Properties.GetProperty<object>(propDef.Name, null);
+                        string savedValue = savedValueObj?.ToString();
                         if (savedValue != null)
                         {
                             SetControlToValue(control, propDef, savedValue);
