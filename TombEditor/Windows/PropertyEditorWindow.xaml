@@ -41,12 +41,12 @@
         <StackPanel Margin="0,0,0,10">
             <TextBlock x:Name="TitleText" 
                       Text="Object Properties" 
-                      Foreground="{DynamicResource Brush_Foreground}" 
+                      Foreground="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}" 
                       FontSize="14" 
                       FontWeight="Bold"/>
             <TextBlock x:Name="SubtitleText" 
                       Text="Configure object settings" 
-                      Foreground="{DynamicResource Brush_Foreground_Weak}" 
+                      Foreground="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}" 
                       FontSize="11" 
                       Margin="0,2,0,0"/>
         </StackPanel>
@@ -73,7 +73,7 @@
                          HorizontalScrollBarVisibility="Disabled">
                 <TextBlock x:Name="DescriptionText"
                           Text="Select a property to see its description"
-                          Foreground="{DynamicResource Brush_Foreground_Weak}"
+                          Foreground="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"
                           FontSize="11"
                           FontStyle="Italic"
                           TextWrapping="Wrap"

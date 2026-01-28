@@ -593,20 +593,10 @@ namespace TombEditor.Windows
             // For standard properties (HP, OCB for moveables)
             if (_instance is MoveableInstance moveable)
             {
-                if (propertyName == "HP")
-                    return moveable.CustomProperties.GetProperty("HP", 100);
-                if (propertyName == "OCB")
-                    return moveable.Ocb;
-                
                 return moveable.CustomProperties.GetProperty(propertyName);
             }
             else if (_instance is StaticInstance staticMesh)
             {
-                if (propertyName == "HP")
-                    return staticMesh.CustomProperties.GetProperty("HP", 150);
-                if (propertyName == "OCB")
-                    return staticMesh.Ocb;
-                
                 return staticMesh.CustomProperties.GetProperty(propertyName);
             }
 
