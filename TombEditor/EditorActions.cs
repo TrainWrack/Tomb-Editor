@@ -5973,5 +5973,128 @@ namespace TombEditor
             if (success)
                 SmartBuildGeometry(room, area);
         }
+
+        public static void ReloadAllPropertiesFromWad(Editor editor)
+        {
+            if (editor?.Level == null || !editor.Level.IsTombEngine)
+            {
+                editor.SendMessage("This feature is only available for Tomb Engine levels.", PopupType.Warning);
+                return;
+            }
+
+            int updatedCount = 0;
+            var level = editor.Level;
+
+            // Reload properties for all moveables
+            foreach (var room in level.Rooms.Where(r => r != null))
+            {
+                foreach (var obj in room.Objects.OfType<MoveableInstance>())
+                {
+                    var wadMoveable = level.Settings?.WadTryGetMoveable(obj.WadObjectId);
+                    if (wadMoveable?.CustomProperties != null && wadMoveable.CustomProperties.GetAll().Count > 0)
+                    {
+                        // Clear existing properties
+                        obj.CustomProperties = new TombLib.LevelData.Properties.PropertyCollection();
+                        
+                        // Copy from WAD
+                        foreach (var kvp in wadMoveable.CustomProperties.GetAll())
+                        {
+                            obj.CustomProperties.SetProperty(kvp.Key, kvp.Value);
+                        }
+                        
+                        updatedCount++;
+                        editor.ObjectChange(obj, ObjectChangeType.Change);
+                    }
+                }
+
+                // Reload properties for all statics
+                foreach (var obj in room.Objects.OfType<StaticInstance>())
+                {
+                    var wadStatic = level.Settings?.WadTryGetStatic(obj.WadObjectId);
+                    if (wadStatic?.CustomProperties != null && wadStatic.CustomProperties.GetAll().Count > 0)
+                    {
+                        // Clear existing properties
+                        obj.CustomProperties = new TombLib.LevelData.Properties.PropertyCollection();
+                        
+                        // Copy from WAD
+                        foreach (var kvp in wadStatic.CustomProperties.GetAll())
+                        {
+                            obj.CustomProperties.SetProperty(kvp.Key, kvp.Value);
+                        }
+                        
+                        updatedCount++;
+                        editor.ObjectChange(obj, ObjectChangeType.Change);
+                    }
+                }
+            }
+
+            if (updatedCount > 0)
+            {
+                editor.SendMessage($"Reloaded properties from WAD for {updatedCount} objects.", PopupType.Info);
+                editor.LevelChanges = true;
+            }
+            else
+            {
+                editor.SendMessage("No objects with WAD properties found to reload.", PopupType.Info);
+            }
+        }
+
+        public static void ResetAllProperties(Editor editor)
+        {
+            if (editor?.Level == null || !editor.Level.IsTombEngine)
+            {
+                editor.SendMessage("This feature is only available for Tomb Engine levels.", PopupType.Warning);
+                return;
+            }
+
+            if (DarkMessageBox.Show(editor, 
+                "This will clear all custom properties from all objects in the level.\n\n" +
+                "Objects will revert to default properties from XML files or WAD.\n\n" +
+                "This action cannot be undone. Continue?",
+                "Reset All Properties",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            int clearedCount = 0;
+            var level = editor.Level;
+
+            // Clear properties for all moveables
+            foreach (var room in level.Rooms.Where(r => r != null))
+            {
+                foreach (var obj in room.Objects.OfType<MoveableInstance>())
+                {
+                    if (obj.CustomProperties.GetAll().Count > 0)
+                    {
+                        obj.CustomProperties = new TombLib.LevelData.Properties.PropertyCollection();
+                        clearedCount++;
+                        editor.ObjectChange(obj, ObjectChangeType.Change);
+                    }
+                }
+
+                // Clear properties for all statics
+                foreach (var obj in room.Objects.OfType<StaticInstance>())
+                {
+                    if (obj.CustomProperties.GetAll().Count > 0)
+                    {
+                        obj.CustomProperties = new TombLib.LevelData.Properties.PropertyCollection();
+                        clearedCount++;
+                        editor.ObjectChange(obj, ObjectChangeType.Change);
+                    }
+                }
+            }
+
+            if (clearedCount > 0)
+            {
+                editor.SendMessage($"Cleared properties for {clearedCount} objects.", PopupType.Info);
+                editor.LevelChanges = true;
+            }
+            else
+            {
+                editor.SendMessage("No objects with custom properties found.", PopupType.Info);
+            }
+        }
     }
 }
