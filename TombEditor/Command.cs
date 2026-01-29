@@ -2379,6 +2379,16 @@ namespace TombEditor
                 args.Editor.HighlightedSplit = 9;
             });
 
+            AddCommand("ReloadAllPropertiesFromWad", "Reload all properties from WAD", CommandType.Objects, delegate (CommandArgs args)
+            {
+                EditorActions.ReloadAllPropertiesFromWad(args.Editor, args.Window);
+            });
+
+            AddCommand("ResetAllProperties", "Reset all properties", CommandType.Objects, delegate (CommandArgs args)
+            {
+                EditorActions.ResetAllProperties(args.Editor, args.Window);
+            });
+
             _commands = _commands.OrderBy(o => o.Type).ToList();
         }
     }

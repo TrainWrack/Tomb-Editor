@@ -136,6 +136,8 @@ namespace TombEditor.Forms
 			makeQuickItemGroupToolStripMenuItem = new ToolStripMenuItem();
 			getObjectStatisticsToolStripMenuItem = new ToolStripMenuItem();
 			generateObjectNamesToolStripMenuItem = new ToolStripMenuItem();
+			reloadAllPropertiesFromWadToolStripMenuItem = new ToolStripMenuItem();
+			resetAllPropertiesToolStripMenuItem = new ToolStripMenuItem();
 			texturesToolStripMenuItem = new ToolStripMenuItem();
 			loadTextureToolStripMenuItem = new ToolStripMenuItem();
 			removeTexturesToolStripMenuItem = new ToolStripMenuItem();
@@ -990,7 +992,7 @@ namespace TombEditor.Forms
 			// itemsToolStripMenuItem
 			// 
 			itemsToolStripMenuItem.BackColor = System.Drawing.Color.FromArgb(60, 63, 65);
-			itemsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addWadToolStripMenuItem, removeWadsToolStripMenuItem, reloadWadsToolStripMenuItem, reloadSoundsToolStripMenuItem, toolStripMenuSeparator6, toolStripMenuItem8, addPortalToolStripMenuItem, addTriggerToolStripMenuItem, addBoxVolumeToolStripMenuItem, addSphereVolumeToolStripMenuItem, toolStripSeparator7, deleteAllToolStripMenuItem, toolStripMenuSeparator8, findObjectToolStripMenuItem, moveLaraToolStripMenuItem, selectItemsInSelectedAreaToolStripMenuItem, selectFloorBelowObjectToolStripMenuItem, splitSectorObjectOnSelectionToolStripMenuItem, toolStripSeparator3, setStaticMeshColorToRoomLightToolStripMenuItem, toolStripMenuItem10, toolStripSeparator9, makeQuickItemGroupToolStripMenuItem, getObjectStatisticsToolStripMenuItem, generateObjectNamesToolStripMenuItem });
+			itemsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addWadToolStripMenuItem, removeWadsToolStripMenuItem, reloadWadsToolStripMenuItem, reloadSoundsToolStripMenuItem, toolStripMenuSeparator6, toolStripMenuItem8, addPortalToolStripMenuItem, addTriggerToolStripMenuItem, addBoxVolumeToolStripMenuItem, addSphereVolumeToolStripMenuItem, toolStripSeparator7, deleteAllToolStripMenuItem, toolStripMenuSeparator8, findObjectToolStripMenuItem, moveLaraToolStripMenuItem, selectItemsInSelectedAreaToolStripMenuItem, selectFloorBelowObjectToolStripMenuItem, splitSectorObjectOnSelectionToolStripMenuItem, toolStripSeparator3, setStaticMeshColorToRoomLightToolStripMenuItem, toolStripMenuItem10, toolStripSeparator9, makeQuickItemGroupToolStripMenuItem, getObjectStatisticsToolStripMenuItem, generateObjectNamesToolStripMenuItem, reloadAllPropertiesFromWadToolStripMenuItem, resetAllPropertiesToolStripMenuItem });
 			itemsToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(220, 220, 220);
 			itemsToolStripMenuItem.Name = "itemsToolStripMenuItem";
 			itemsToolStripMenuItem.Size = new System.Drawing.Size(48, 25);
@@ -1344,6 +1346,24 @@ namespace TombEditor.Forms
 			generateObjectNamesToolStripMenuItem.Size = new System.Drawing.Size(259, 22);
 			generateObjectNamesToolStripMenuItem.Tag = "GenerateObjectNames";
 			generateObjectNamesToolStripMenuItem.Text = "GenerateObjectNames";
+			// 
+			// reloadAllPropertiesFromWadToolStripMenuItem
+			// 
+			reloadAllPropertiesFromWadToolStripMenuItem.BackColor = System.Drawing.Color.FromArgb(60, 63, 65);
+			reloadAllPropertiesFromWadToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(220, 220, 220);
+			reloadAllPropertiesFromWadToolStripMenuItem.Name = "reloadAllPropertiesFromWadToolStripMenuItem";
+			reloadAllPropertiesFromWadToolStripMenuItem.Size = new System.Drawing.Size(259, 22);
+			reloadAllPropertiesFromWadToolStripMenuItem.Tag = "ReloadAllPropertiesFromWad";
+			reloadAllPropertiesFromWadToolStripMenuItem.Text = "ReloadAllPropertiesFromWad";
+			// 
+			// resetAllPropertiesToolStripMenuItem
+			// 
+			resetAllPropertiesToolStripMenuItem.BackColor = System.Drawing.Color.FromArgb(60, 63, 65);
+			resetAllPropertiesToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(220, 220, 220);
+			resetAllPropertiesToolStripMenuItem.Name = "resetAllPropertiesToolStripMenuItem";
+			resetAllPropertiesToolStripMenuItem.Size = new System.Drawing.Size(259, 22);
+			resetAllPropertiesToolStripMenuItem.Tag = "ResetAllProperties";
+			resetAllPropertiesToolStripMenuItem.Text = "ResetAllProperties";
 			// 
 			// texturesToolStripMenuItem
 			// 
@@ -2429,6 +2449,8 @@ namespace TombEditor.Forms
         private ToolStripMenuItem selectFloorBelowObjectToolStripMenuItem;
         private ToolStripMenuItem deleteMissingObjectsToolStripMenuItem;
         private ToolStripMenuItem generateObjectNamesToolStripMenuItem;
+        private ToolStripMenuItem reloadAllPropertiesFromWadToolStripMenuItem;
+        private ToolStripMenuItem resetAllPropertiesToolStripMenuItem;
         private ToolStripMenuItem selectItemsInSelectedAreaToolStripMenuItem;
         private ToolStripMenuItem convertToTENToolstripMenuItem;
         private ToolStripMenuItem butFindMenu;
