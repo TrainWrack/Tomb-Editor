@@ -6031,7 +6031,7 @@ namespace TombEditor
             if (updatedCount > 0)
             {
                 editor.SendMessage($"Reloaded properties from WAD for {updatedCount} objects.", PopupType.Info);
-                editor.LevelChanges = true;
+                editor.LevelSet(editor.Level);
             }
             else
             {
@@ -6047,7 +6047,7 @@ namespace TombEditor
                 return;
             }
 
-            if (DarkMessageBox.Show(editor, 
+            if (DarkMessageBox.Show(editor.Form, 
                 "This will clear all custom properties from all objects in the level.\n\n" +
                 "Objects will revert to default properties from XML files or WAD.\n\n" +
                 "This action cannot be undone. Continue?",
@@ -6089,7 +6089,7 @@ namespace TombEditor
             if (clearedCount > 0)
             {
                 editor.SendMessage($"Cleared properties for {clearedCount} objects.", PopupType.Info);
-                editor.LevelChanges = true;
+                editor.LevelSet(editor.Level);
             }
             else
             {
