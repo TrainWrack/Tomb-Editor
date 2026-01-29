@@ -1100,7 +1100,7 @@ namespace TombEditor
                 if (moveables.Any() && !statics.Any())
                 {
                     // Batch edit moveables using unified PropertyEditorWindow
-                    var window = new TombEditor.Windows.PropertyEditorWindow(moveables.Cast<ItemInstance>().ToList(), true);
+                    var window = new TombEditor.Windows.PropertyEditorWindow(moveables.Cast<ItemInstance>().ToList(), true, PropertyEditorContext.TombEditor, null, args.Editor.Level);
                     if (window.ShowDialog() == true)
                     {
                         foreach (var obj in moveables)
@@ -1111,7 +1111,7 @@ namespace TombEditor
                 else if (statics.Any() && !moveables.Any())
                 {
                     // Batch edit statics using unified PropertyEditorWindow
-                    var window = new TombEditor.Windows.PropertyEditorWindow(statics.Cast<ItemInstance>().ToList(), true);
+                    var window = new TombEditor.Windows.PropertyEditorWindow(statics.Cast<ItemInstance>().ToList(), true, PropertyEditorContext.TombEditor, null, args.Editor.Level);
                     if (window.ShowDialog() == true)
                     {
                         foreach (var obj in statics)
@@ -1127,7 +1127,7 @@ namespace TombEditor
                     EditColor(owner, (MoveableInstance)instance);
                 else
                 {
-                    using (var formMoveable = GetObjectSetupWindow((MoveableInstance)instance))
+                    using (var formMoveable = GetObjectSetupWindow((MoveableInstance)instance, _editor.Level))
                         if (formMoveable.ShowDialog(owner) != DialogResult.OK)
                             return;
                 }
@@ -1143,7 +1143,7 @@ namespace TombEditor
                 }
                 else if (_editor.Level.IsNG || _editor.Level.IsTombEngine)
                 {
-                    using (var formStaticMesh = GetObjectSetupWindow((StaticInstance)instance))
+                    using (var formStaticMesh = GetObjectSetupWindow((StaticInstance)instance, _editor.Level))
                         if (formStaticMesh.ShowDialog(owner) != DialogResult.OK)
                             return;
                 }

@@ -13,12 +13,14 @@ namespace TombEditor.Forms.TombEngine
     public partial class FormMoveable : DarkForm
     {
         private readonly MoveableInstance _moveable;
+        private readonly Level _level;
         private PropertyEditorWindow _wpfWindow;
         private bool _wpfShown = false;
 
-        public FormMoveable(MoveableInstance moveable)
+        public FormMoveable(MoveableInstance moveable, Level level = null)
         {
             _moveable = moveable;
+            _level = level;
             InitializeComponent();
 
             // Set window property handlers
@@ -54,7 +56,7 @@ namespace TombEditor.Forms.TombEngine
 
         private void ShowWPFPropertyEditor()
         {
-            _wpfWindow = new PropertyEditorWindow(_moveable, true);
+            _wpfWindow = new PropertyEditorWindow(_moveable, true, PropertyEditorContext.TombEditor, null, _level);
             
             // Convert WPF window result to WinForms DialogResult
             var wpfResult = _wpfWindow.ShowDialog();

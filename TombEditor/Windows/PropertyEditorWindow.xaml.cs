@@ -43,7 +43,7 @@ namespace TombEditor.Windows
         public bool PropertiesChanged { get; private set; }
 
         // Constructor for single object editing
-        public PropertyEditorWindow(ItemInstance instance, bool isTombEngine, PropertyEditorContext context = PropertyEditorContext.TombEditor, TRVersion.Game? gameVersion = null)
+        public PropertyEditorWindow(ItemInstance instance, bool isTombEngine, PropertyEditorContext context = PropertyEditorContext.TombEditor, TRVersion.Game? gameVersion = null, Level level = null)
         {
             InitializeComponent();
             _instance = instance;
@@ -55,24 +55,32 @@ namespace TombEditor.Windows
             _propertyControls = new Dictionary<string, FrameworkElement>();
             PropertiesChanged = false;
 
-            // In TombEditor context, save current CustomProperties for "Reset to Saved" functionality
-            if (_context == PropertyEditorContext.TombEditor)
+            // In TombEditor context, save CustomProperties from WAD for "Reset to Saved" functionality
+            if (_context == PropertyEditorContext.TombEditor && level != null)
             {
                 _savedWad2Properties = new PropertyCollection();
                 
-                // Access CustomProperties from the appropriate derived type
+                // Look up WAD object from level settings (same logic as ItemInstance.FromItemType)
                 if (instance is MoveableInstance moveableInst)
                 {
-                    foreach (var kvp in moveableInst.CustomProperties.GetAll())
+                    var wadMoveable = level.Settings?.WadTryGetMoveable(moveableInst.WadObjectId);
+                    if (wadMoveable?.CustomProperties != null)
                     {
-                        _savedWad2Properties.SetProperty(kvp.Key, kvp.Value);
+                        foreach (var kvp in wadMoveable.CustomProperties.GetAll())
+                        {
+                            _savedWad2Properties.SetProperty(kvp.Key, kvp.Value);
+                        }
                     }
                 }
                 else if (instance is StaticInstance staticInst)
                 {
-                    foreach (var kvp in staticInst.CustomProperties.GetAll())
+                    var wadStatic = level.Settings?.WadTryGetStatic(staticInst.WadObjectId);
+                    if (wadStatic?.CustomProperties != null)
                     {
-                        _savedWad2Properties.SetProperty(kvp.Key, kvp.Value);
+                        foreach (var kvp in wadStatic.CustomProperties.GetAll())
+                        {
+                            _savedWad2Properties.SetProperty(kvp.Key, kvp.Value);
+                        }
                     }
                 }
             }
@@ -108,7 +116,7 @@ namespace TombEditor.Windows
         }
 
         // Constructor for batch editing multiple objects
-        public PropertyEditorWindow(List<ItemInstance> instances, bool isTombEngine, PropertyEditorContext context = PropertyEditorContext.TombEditor, TRVersion.Game? gameVersion = null)
+        public PropertyEditorWindow(List<ItemInstance> instances, bool isTombEngine, PropertyEditorContext context = PropertyEditorContext.TombEditor, TRVersion.Game? gameVersion = null, Level level = null)
         {
             if (instances == null || instances.Count == 0)
                 throw new ArgumentException("No instances provided for batch editing");

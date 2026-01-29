@@ -13,12 +13,14 @@ namespace TombEditor.Forms.TombEngine
     public partial class FormStatic : DarkForm
     {
         private readonly StaticInstance _staticMesh;
+        private readonly Level _level;
         private PropertyEditorWindow _wpfWindow;
         private bool _wpfShown = false;
 
-        public FormStatic(StaticInstance staticMesh)
+        public FormStatic(StaticInstance staticMesh, Level level = null)
         {
             _staticMesh = staticMesh;
+            _level = level;
             InitializeComponent();
 
             // Set window property handlers
@@ -54,7 +56,7 @@ namespace TombEditor.Forms.TombEngine
 
         private void ShowWPFPropertyEditor()
         {
-            _wpfWindow = new PropertyEditorWindow(_staticMesh, true);
+            _wpfWindow = new PropertyEditorWindow(_staticMesh, true, PropertyEditorContext.TombEditor, null, _level);
             
             // Convert WPF window result to WinForms DialogResult
             var wpfResult = _wpfWindow.ShowDialog();
