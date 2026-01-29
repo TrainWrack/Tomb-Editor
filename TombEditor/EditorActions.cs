@@ -5974,7 +5974,7 @@ namespace TombEditor
                 SmartBuildGeometry(room, area);
         }
 
-        public static void ReloadAllPropertiesFromWad(Editor editor)
+        public static void ReloadAllPropertiesFromWad(Editor editor, IWin32Window owner)
         {
             if (editor?.Level == null || !editor.Level.IsTombEngine)
             {
@@ -6031,7 +6031,6 @@ namespace TombEditor
             if (updatedCount > 0)
             {
                 editor.SendMessage($"Reloaded properties from WAD for {updatedCount} objects.", PopupType.Info);
-                editor.LevelSet(editor.Level);
             }
             else
             {
@@ -6039,7 +6038,7 @@ namespace TombEditor
             }
         }
 
-        public static void ResetAllProperties(Editor editor)
+        public static void ResetAllProperties(Editor editor, IWin32Window owner)
         {
             if (editor?.Level == null || !editor.Level.IsTombEngine)
             {
@@ -6047,7 +6046,7 @@ namespace TombEditor
                 return;
             }
 
-            if (DarkMessageBox.Show(editor.Form, 
+            if (DarkMessageBox.Show(owner, 
                 "This will clear all custom properties from all objects in the level.\n\n" +
                 "Objects will revert to default properties from XML files or WAD.\n\n" +
                 "This action cannot be undone. Continue?",
@@ -6089,7 +6088,6 @@ namespace TombEditor
             if (clearedCount > 0)
             {
                 editor.SendMessage($"Cleared properties for {clearedCount} objects.", PopupType.Info);
-                editor.LevelSet(editor.Level);
             }
             else
             {
