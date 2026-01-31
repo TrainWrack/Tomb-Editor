@@ -1014,7 +1014,14 @@ namespace TombEditor
                 instance.Room.RebuildLighting(_editor.Configuration.Rendering3D_HighQualityLightPreview);
         }
 
-        public static DarkForm GetObjectSetupWindow(params object[] args)
+        // Overload for non-TombEngine levels (TR4, NG, etc.) - only needs instance
+        public static DarkForm GetObjectSetupWindow(object instance)
+        {
+            return GetObjectSetupWindow(instance, null);
+        }
+
+        // Full implementation with optional Level parameter
+        public static DarkForm GetObjectSetupWindow(object instance, Level level)
         {
             // This function decides on which window version to use based on game version.
             // Right now it is primarily future-proof setup for TEN objects which will feature
@@ -1026,11 +1033,11 @@ namespace TombEditor
             // 3. If game version is NOT TEN, always use "TombEditor.Forms" namespace
             // 4. If no window was found in either namespace, throw an exception, since there's no setup window for such object.
 
-            if (!args.Any() || !(args[0] is ObjectInstance))
-                throw new ArgumentException("Object instance was not provided as first argument for this function.");
+            if (!(instance is ObjectInstance))
+                throw new ArgumentException("Object instance was not provided for this function.");
 
             var triedAlternateNamespace = false;
-            var objectName = (args[0] as ObjectInstance).GetType().Name.Replace("Instance", string.Empty);
+            var objectName = (instance as ObjectInstance).GetType().Name.Replace("Instance", string.Empty);
 
             // Additional filter for volume types
             if (objectName.Contains("Volume")) objectName = "Volume";
@@ -1041,14 +1048,25 @@ namespace TombEditor
 
             while (true)
             {
-                var formType = Type.GetType("TombEditor.Forms" + (_editor.Level.IsTombEngine && !triedAlternateNamespace ? ".TombEngine" : "") + ".Form" + objectName);
+                var isTombEngine = level != null && level.IsTombEngine;
+                var formType = Type.GetType("TombEditor.Forms" + (isTombEngine && !triedAlternateNamespace ? ".TombEngine" : "") + ".Form" + objectName);
 
                 if (formType != null)
                 {
-                    // For non-TombEngine fallback forms, only pass the instance (first argument)
-                    // TombEngine forms expect (instance, level) but non-TombEngine forms expect (instance) only
-                    var formArgs = (triedAlternateNamespace && args.Length > 1) ? new object[] { args[0] } : args;
-                    var form = Activator.CreateInstance(formType, formArgs);
+                    // Create args array based on whether this is a TombEngine form or non-TombEngine form
+                    object[] args;
+                    if (isTombEngine && !triedAlternateNamespace)
+                    {
+                        // TombEngine forms expect (instance, level)
+                        args = new object[] { instance, level };
+                    }
+                    else
+                    {
+                        // Non-TombEngine forms expect (instance) only
+                        args = new object[] { instance };
+                    }
+                    
+                    var form = Activator.CreateInstance(formType, args);
                     if (form is DarkForm) return (DarkForm)form;
                 }
 
@@ -1131,7 +1149,9 @@ namespace TombEditor
                     EditColor(owner, (MoveableInstance)instance);
                 else
                 {
-                    using (var formMoveable = GetObjectSetupWindow((MoveableInstance)instance, _editor.Level))
+                    using (var formMoveable = _editor.Level.IsTombEngine
+                        ? GetObjectSetupWindow((MoveableInstance)instance, _editor.Level)
+                        : GetObjectSetupWindow((MoveableInstance)instance))
                         if (formMoveable.ShowDialog(owner) != DialogResult.OK)
                             return;
                 }
@@ -1147,7 +1167,9 @@ namespace TombEditor
                 }
                 else if (_editor.Level.IsNG || _editor.Level.IsTombEngine)
                 {
-                    using (var formStaticMesh = GetObjectSetupWindow((StaticInstance)instance, _editor.Level))
+                    using (var formStaticMesh = _editor.Level.IsTombEngine
+                        ? GetObjectSetupWindow((StaticInstance)instance, _editor.Level)
+                        : GetObjectSetupWindow((StaticInstance)instance))
                         if (formStaticMesh.ShowDialog(owner) != DialogResult.OK)
                             return;
                 }
