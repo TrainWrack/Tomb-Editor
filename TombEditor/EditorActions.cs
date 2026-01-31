@@ -1045,7 +1045,10 @@ namespace TombEditor
 
                 if (formType != null)
                 {
-                    var form = Activator.CreateInstance(formType, args);
+                    // For non-TombEngine fallback forms, only pass the instance (first argument)
+                    // TombEngine forms expect (instance, level) but non-TombEngine forms expect (instance) only
+                    var formArgs = (triedAlternateNamespace && args.Length > 1) ? new object[] { args[0] } : args;
+                    var form = Activator.CreateInstance(formType, formArgs);
                     if (form is DarkForm) return (DarkForm)form;
                 }
 
