@@ -1020,6 +1020,13 @@ namespace TombEditor
             return GetObjectSetupWindow(instance, null);
         }
 
+        // Specific overload for TriggerInstance with actions
+        public static DarkForm GetObjectSetupWindow(TriggerInstance trigger, Level level, 
+            Action<ObjectInstance> selectObject, Action<Room> selectRoom)
+        {
+            return new FormTrigger(trigger, level, selectObject, selectRoom);
+        }
+
         // Full implementation with optional Level parameter
         public static DarkForm GetObjectSetupWindow(object instance, Level level)
         {
