@@ -10,6 +10,28 @@ namespace TombLib.LevelData.VisualScripting
         public string Value { get; set; }
     }
 
+    // Input variable represents a slot that can accept data from another node's output
+    public class InputVariable
+    {
+        public string Name { get; set; } = string.Empty;
+        public string LinkedOutputNodeName { get; set; } = string.Empty;  // Name of the node providing the output
+        public string LinkedOutputName { get; set; } = string.Empty;      // Name of the specific output variable
+        public bool IsLinked => !string.IsNullOrEmpty(LinkedOutputNodeName) && !string.IsNullOrEmpty(LinkedOutputName);
+    }
+
+    // Output variable represents a slot that can provide data to another node's input
+    public class OutputVariable
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;  // Data type (e.g., "String", "Numerical", "Boolean")
+    }
+
+    // Dynamic arguments that can be set by user or linked from another node
+    public class DynamicData
+    {
+        public Dictionary<string, string> UserDefinedArguments { get; private set; } = new Dictionary<string, string>();
+    }
+
     // Every node in visual trigger has this set of parameters. Name and color are
     // merely UI properties, while Previous/Next and ScreenPosition determines the
     // order of compilation. Every node may have or may have no any previous or
@@ -35,6 +57,12 @@ namespace TombLib.LevelData.VisualScripting
         public string Function { get; set; } = string.Empty;
         public List<TriggerNodeArgument> Arguments { get; private set; } = new List<TriggerNodeArgument>();
 
+        // New properties for enhanced node linking functionality
+        public List<InputVariable> Inputs { get; private set; } = new List<InputVariable>();
+        public List<OutputVariable> Outputs { get; private set; } = new List<OutputVariable>();
+        public DynamicData DynamicArguments { get; private set; } = new DynamicData();
+        public List<string> AllowedEventModes { get; private set; } = new List<string>();
+
         public TriggerNode Previous { get; set; }
         public TriggerNode Next { get; set; }
 
@@ -57,6 +85,36 @@ namespace TombLib.LevelData.VisualScripting
         {
             var node = (TriggerNode)MemberwiseClone();
             node.Arguments = new List<TriggerNodeArgument>(Arguments);
+            
+            // Clone new properties
+            node.Inputs = new List<InputVariable>();
+            foreach (var input in Inputs)
+            {
+                node.Inputs.Add(new InputVariable
+                {
+                    Name = input.Name,
+                    LinkedOutputNodeName = input.LinkedOutputNodeName,
+                    LinkedOutputName = input.LinkedOutputName
+                });
+            }
+            
+            node.Outputs = new List<OutputVariable>();
+            foreach (var output in Outputs)
+            {
+                node.Outputs.Add(new OutputVariable
+                {
+                    Name = output.Name,
+                    Type = output.Type
+                });
+            }
+            
+            node.DynamicArguments = new DynamicData();
+            foreach (var kvp in DynamicArguments.UserDefinedArguments)
+            {
+                node.DynamicArguments.UserDefinedArguments[kvp.Key] = kvp.Value;
+            }
+            
+            node.AllowedEventModes = new List<string>(AllowedEventModes);
 
             if (Next != null)
             {
@@ -76,6 +134,17 @@ namespace TombLib.LevelData.VisualScripting
                 hash ^= Function.GetHashCode();
 
             Arguments.ForEach(a => { if (!string.IsNullOrEmpty(a.Value)) hash ^= a.Value.GetHashCode(); });
+            
+            // Include new properties in hash code
+            Inputs.ForEach(i => { if (!string.IsNullOrEmpty(i.Name)) hash ^= i.Name.GetHashCode(); });
+            Outputs.ForEach(o => { if (!string.IsNullOrEmpty(o.Name)) hash ^= o.Name.GetHashCode(); });
+            foreach (var kvp in DynamicArguments.UserDefinedArguments)
+            {
+                if (!string.IsNullOrEmpty(kvp.Value))
+                    hash ^= kvp.Value.GetHashCode();
+            }
+            AllowedEventModes.ForEach(e => { if (!string.IsNullOrEmpty(e)) hash ^= e.GetHashCode(); });
+            
             if (Next != null)
                 hash ^= Next.GetHashCode();
 
@@ -156,6 +225,33 @@ namespace TombLib.LevelData.VisualScripting
             };
 
             node.Arguments.AddRange(Arguments);
+            
+            // Clone new properties
+            foreach (var input in Inputs)
+            {
+                node.Inputs.Add(new InputVariable
+                {
+                    Name = input.Name,
+                    LinkedOutputNodeName = input.LinkedOutputNodeName,
+                    LinkedOutputName = input.LinkedOutputName
+                });
+            }
+            
+            foreach (var output in Outputs)
+            {
+                node.Outputs.Add(new OutputVariable
+                {
+                    Name = output.Name,
+                    Type = output.Type
+                });
+            }
+            
+            foreach (var kvp in DynamicArguments.UserDefinedArguments)
+            {
+                node.DynamicArguments.UserDefinedArguments[kvp.Key] = kvp.Value;
+            }
+            
+            node.AllowedEventModes.AddRange(AllowedEventModes);
 
             if (Next != null)
             {

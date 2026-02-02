@@ -145,6 +145,11 @@ namespace TombLib.Controls.VisualScripting
         public bool LinksAsRopes { get; set; } = false;
         public bool ShowGrips { get; set; } = false;
 
+        // Current event mode for node validation
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public string CurrentEventMode { get; set; } = string.Empty;
+
         private const float _mouseWheelScrollFactor = 0.04f;
 
         private const float _hotNodeTransparency = 0.6f;
@@ -301,6 +306,28 @@ namespace TombLib.Controls.VisualScripting
             LayoutVisibleNodes();
         }
 
+        /// <summary>
+        /// Validates if a node is compatible with the current event mode.
+        /// Returns true if node is valid for the current event mode, or if no restrictions apply.
+        /// </summary>
+        public bool ValidateNodeEventMode(TriggerNode node, out string warningMessage)
+        {
+            warningMessage = string.Empty;
+
+            // If no event mode is set or node has no restrictions, allow it
+            if (string.IsNullOrEmpty(CurrentEventMode) || node.AllowedEventModes.Count == 0)
+                return true;
+
+            // Check if the node explicitly allows this event mode
+            if (!node.AllowedEventModes.Contains(CurrentEventMode))
+            {
+                warningMessage = $"Node '{node.Name}' is not explicitly designed for '{CurrentEventMode}' events. Proceed with caution.";
+                return false;
+            }
+
+            return true;
+        }
+
         public void AddConditionNode(bool linkToPrevious, bool linkToElse)
         {
             AddNode(linkToPrevious, linkToElse, true);
@@ -366,6 +393,80 @@ namespace TombLib.Controls.VisualScripting
             }
 
             Invalidate();
+        }
+
+        /// <summary>
+        /// Links an input variable of the target node to an output variable of the source node.
+        /// This creates a data flow connection between nodes beyond the standard Next/Previous flow.
+        /// </summary>
+        public bool LinkInputToOutput(TriggerNode sourceNode, string outputName, TriggerNode targetNode, string inputName)
+        {
+            if (sourceNode == null || targetNode == null)
+                return false;
+
+            // Check if the output exists on the source node
+            var output = sourceNode.Outputs.FirstOrDefault(o => o.Name == outputName);
+            if (output == null)
+                return false;
+
+            // Find or create the input on the target node
+            var input = targetNode.Inputs.FirstOrDefault(i => i.Name == inputName);
+            if (input == null)
+            {
+                input = new InputVariable { Name = inputName };
+                targetNode.Inputs.Add(input);
+            }
+
+            // Link the input to the output
+            input.LinkedOutputNodeName = sourceNode.Name;
+            input.LinkedOutputName = outputName;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Unlinks an input variable from its connected output.
+        /// </summary>
+        public void UnlinkInput(TriggerNode node, string inputName)
+        {
+            if (node == null)
+                return;
+
+            var input = node.Inputs.FirstOrDefault(i => i.Name == inputName);
+            if (input != null)
+            {
+                input.LinkedOutputNodeName = string.Empty;
+                input.LinkedOutputName = string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Gets the effective value for an input - either from a linked output or from user-defined arguments.
+        /// </summary>
+        public string GetEffectiveInputValue(TriggerNode node, string inputName)
+        {
+            if (node == null)
+                return string.Empty;
+
+            var input = node.Inputs.FirstOrDefault(i => i.Name == inputName);
+            if (input != null && input.IsLinked)
+            {
+                // Try to find the linked source node and get its output value
+                var sourceNode = Nodes.FirstOrDefault(n => n.Name == input.LinkedOutputNodeName);
+                if (sourceNode != null)
+                {
+                    // In a real implementation, this would evaluate the output value
+                    return $"[Linked from {input.LinkedOutputNodeName}.{input.LinkedOutputName}]";
+                }
+            }
+
+            // Fall back to user-defined argument
+            if (node.DynamicArguments.UserDefinedArguments.TryGetValue(inputName, out string value))
+            {
+                return value;
+            }
+
+            return string.Empty;
         }
 
         public void MoveSelectedNodes(TriggerNode rootNode, Vector2 delta)
