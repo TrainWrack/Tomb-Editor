@@ -75,6 +75,22 @@ Comment metadata entry reference (metadata block is indicated by a keyword which
  - **!Ignore** - if this keyword is used, nearest encountered function declaration will be ignored. Useful if you
    need to place helper functions which must be ignored by parser (however, it is recommended to use `_System.lua`
    file for those).
+   
+ - **!Inputs "NAME, TYPE, DESC"** - defines input variable slots that can receive data from other nodes' outputs.
+   Multiple inputs can be defined by separating them with quotes, e.g. `!Inputs "position, Vector3, XYZ position"`.
+   Format: `"InputName, DataType, Description"` where:
+   - **InputName**: Name of the input slot
+   - **DataType**: Type hint (Vector3, Numerical, String, Boolean, Color, etc.)
+   - **Description**: Tooltip description for the input
+   
+ - **!Outputs "NAME, TYPE, DESC"** - defines output variable slots that can provide data to other nodes' inputs.
+   Multiple outputs can be defined by separating them with quotes. Format is the same as !Inputs.
+   
+ - **!EventModes "MODE1, MODE2, ..."** - specifies which event modes this node is allowed to be used in.
+   Valid event modes include: OnStart, OnEnd, OnLoad, OnSave, OnControlPhase, OnLoop, OnUseItem, OnFreeze.
+   If not specified, node can be used in any event mode. Example: `!EventModes "OnLoop"` restricts the node
+   to only be usable in OnLoop global events. When used in incompatible event modes, Tomb Editor will display
+   a warning but still allow usage.
 
 
 Metadata blocks can appear in any order.
@@ -159,3 +175,56 @@ show, as third parameter in square brackets is set to 0.
 **LevelFuncs.CheckEntityHealth** function declaration should contain same amount of arguments and in the same
 order as metadata argument entry. Therefore, **moveableName** will be read from "Moveable to check" UI argument,
 **operator** will be read from "Kind of check", and so on.
+
+### Example with Inputs, Outputs, and Event Modes
+
+```
+-- !Name "Get moveable position"
+-- !Section "Moveable parameters"
+-- !Description "Gets the current position of a moveable.\nThis position can be linked to other nodes as input."
+-- !Outputs "position, Vector3, Current XYZ position of the moveable"
+-- !EventModes "OnLoop"
+-- !Arguments "NewLine, Moveables, 100, Moveable to get position from"
+
+LevelFuncs.Engine.Node.GetMoveablePosition = function(moveableName)
+	local moveable = TEN.Objects.GetMoveableByName(moveableName)
+	local position = moveable:GetPosition()
+	return position
+end
+
+-- !Name "Modify position of a moveable"
+-- !Section "Moveable parameters"
+-- !Description "Set or modify given moveable position.\nPosition can be linked from another node's output."
+-- !Inputs "newPosition, Vector3, New position value (can be linked from Get Position node)"
+-- !EventModes "OnLoop"
+-- !Arguments "NewLine, Enumeration, [ Change | Set ], 25, Operation type"
+-- !Arguments "Vector3, [ -1000000 | 1000000 | 0 | 1 | 32 ], 75, Position value"
+-- !Arguments "NewLine, Moveables, 100, Moveable to modify"
+
+LevelFuncs.Engine.Node.SetMoveablePosition = function(operation, value, moveableName)
+	local moveable = TEN.Objects.GetMoveableByName(moveableName)
+	
+	if (operation == 0) then
+		local position = moveable:GetPosition()
+		position.x = position.x + value.x
+		position.y = position.y + value.y
+		position.z = position.z + value.z
+		moveable:SetPosition(position)
+	else
+		moveable:SetPosition(value)
+	end
+end
+```
+
+In this example:
+- **GetMoveablePosition** defines an output called "position" of type Vector3. This output can be linked to other nodes' inputs.
+- **SetMoveablePosition** defines an input called "newPosition" that can receive a Vector3 from another node's output (like GetMoveablePosition).
+- Both nodes specify **!EventModes "OnLoop"** which restricts them to only be used in OnLoop global events. If a user tries to use these nodes in other event modes (like OnStart), Tomb Editor will display a warning.
+- When nodes are linked via input/output connections, the data flows from the output node to the input node, allowing for dynamic value passing beyond the standard sequential execution flow.
+
+To link these nodes in Tomb Editor:
+1. Create both nodes in a OnLoop event
+2. Use the node editor's linking functionality to connect the "position" output of GetMoveablePosition to the "newPosition" input of SetMoveablePosition
+3. The position value will be automatically passed between nodes at runtime
+
+See **Sample Input-Output Nodes.lua** for more complete examples of nodes using the input/output system.
