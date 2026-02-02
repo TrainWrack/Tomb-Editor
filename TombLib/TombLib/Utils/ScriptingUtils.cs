@@ -59,6 +59,9 @@ namespace TombLib.Utils
         private const string _nodeTypeId = _metadataPrefix + "condition";
         private const string _nodeArgumentId = _metadataPrefix + "arguments";
         private const string _nodeDescriptionId = _metadataPrefix + "description";
+        private const string _nodeInputsId = _metadataPrefix + "inputs";
+        private const string _nodeOutputsId = _metadataPrefix + "outputs";
+        private const string _nodeEventModesId = _metadataPrefix + "eventmodes";
         private const string _nodeLayoutNewLine = "newline";
 
         public static string GameNodeScriptPath = Path.Combine("Scripts", "Engine", "NodeCatalogs");
@@ -153,6 +156,57 @@ namespace TombLib.Utils
                                 }
 
                                  nodeFunction.Arguments.Add(argLayout);
+                            }
+                            continue;
+                        }
+                        else if (comment.StartsWith(_nodeInputsId, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            var settings = TextExtensions.ExtractValues(comment.Substring(_nodeInputsId.Length, comment.Length - _nodeInputsId.Length));
+                            
+                            foreach (var s in settings)
+                            {
+                                var parts = s.SplitParenthesis().Select(st => st.Trim()).ToList();
+                                if (parts.Count >= 2)
+                                {
+                                    var inputLayout = new InputVariableLayout
+                                    {
+                                        Name = parts[0],
+                                        Type = parts[1],
+                                        Description = parts.Count >= 3 ? parts[2] : string.Empty
+                                    };
+                                    nodeFunction.Inputs.Add(inputLayout);
+                                }
+                            }
+                            continue;
+                        }
+                        else if (comment.StartsWith(_nodeOutputsId, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            var settings = TextExtensions.ExtractValues(comment.Substring(_nodeOutputsId.Length, comment.Length - _nodeOutputsId.Length));
+                            
+                            foreach (var s in settings)
+                            {
+                                var parts = s.SplitParenthesis().Select(st => st.Trim()).ToList();
+                                if (parts.Count >= 2)
+                                {
+                                    var outputLayout = new OutputVariableLayout
+                                    {
+                                        Name = parts[0],
+                                        Type = parts[1],
+                                        Description = parts.Count >= 3 ? parts[2] : string.Empty
+                                    };
+                                    nodeFunction.Outputs.Add(outputLayout);
+                                }
+                            }
+                            continue;
+                        }
+                        else if (comment.StartsWith(_nodeEventModesId, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            var modes = TextExtensions.ExtractValues(comment.Substring(_nodeEventModesId.Length, comment.Length - _nodeEventModesId.Length));
+                            
+                            foreach (var mode in modes)
+                            {
+                                var eventModes = mode.SplitParenthesis().Select(st => st.Trim());
+                                nodeFunction.AllowedEventModes.AddRange(eventModes);
                             }
                             continue;
                         }

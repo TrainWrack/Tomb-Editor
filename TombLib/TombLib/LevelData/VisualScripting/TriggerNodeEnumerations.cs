@@ -70,6 +70,22 @@ namespace TombLib.LevelData.VisualScripting
         public float Width = 100.0f;
     }
 
+    // Layout definition for input variables in node catalog
+    public class InputVariableLayout
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;  // Type hint (e.g., "Vector3", "Numerical", "String")
+        public string Description { get; set; } = string.Empty;
+    }
+
+    // Layout definition for output variables in node catalog
+    public class OutputVariableLayout
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;  // Type hint (e.g., "Vector3", "Numerical", "String")
+        public string Description { get; set; } = string.Empty;
+    }
+
     public class NodeFunction
     {
         public string Name { get; set; }
@@ -78,6 +94,11 @@ namespace TombLib.LevelData.VisualScripting
         public bool Conditional { get; set; }
         public string Signature { get; set; }
         public List<ArgumentLayout> Arguments { get; private set; } = new List<ArgumentLayout>();
+        
+        // New properties for input/output variables and event mode restrictions
+        public List<InputVariableLayout> Inputs { get; private set; } = new List<InputVariableLayout>();
+        public List<OutputVariableLayout> Outputs { get; private set; } = new List<OutputVariableLayout>();
+        public List<string> AllowedEventModes { get; private set; } = new List<string>();
 
         public override string ToString() => Name;
         public override int GetHashCode() => (Name + Conditional.ToString() + Description + Signature + Arguments.Count.ToString()).GetHashCode();

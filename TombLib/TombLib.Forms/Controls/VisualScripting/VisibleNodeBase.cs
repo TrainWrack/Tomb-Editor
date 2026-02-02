@@ -120,6 +120,33 @@ namespace TombLib.Controls.VisualScripting
             var funcSetup = cbFunction.SelectedItem as NodeFunction;
             for (int i = 0; i < funcSetup.Arguments.Count; i++)
                 Node.Arguments.Add(new TriggerNodeArgument() { Name = funcSetup.Arguments[i].Name, Value = funcSetup.Arguments[i].DefaultValue });
+            
+            // Populate inputs from function definition
+            Node.Inputs.Clear();
+            foreach (var inputLayout in funcSetup.Inputs)
+            {
+                Node.Inputs.Add(new InputVariable
+                {
+                    Name = inputLayout.Name,
+                    LinkedOutputNodeId = Guid.Empty,
+                    LinkedOutputName = string.Empty
+                });
+            }
+            
+            // Populate outputs from function definition
+            Node.Outputs.Clear();
+            foreach (var outputLayout in funcSetup.Outputs)
+            {
+                Node.Outputs.Add(new OutputVariable
+                {
+                    Name = outputLayout.Name,
+                    Type = outputLayout.Type
+                });
+            }
+            
+            // Populate allowed event modes from function definition
+            Node.AllowedEventModes.Clear();
+            Node.AllowedEventModes.AddRange(funcSetup.AllowedEventModes);
         }
 
         public void SpawnFunctionList(List<NodeFunction> functions)
