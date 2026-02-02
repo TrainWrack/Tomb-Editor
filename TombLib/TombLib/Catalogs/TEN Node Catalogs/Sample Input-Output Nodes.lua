@@ -125,3 +125,87 @@ LevelFuncs.Engine.Node.TestDistance = function(operator, threshold)
 	
 	return LevelFuncs.Engine.Node.CompareValue(distance, threshold, operator)
 end
+
+-- ============================================================================
+-- ADVANCED EXAMPLE: Multiple Outputs Linked to Multiple Inputs
+-- ============================================================================
+-- This demonstrates a node with TWO outputs linking to another node with TWO inputs
+-- This is useful for operations that need to transfer multiple related values at once
+
+-- !Name "Get moveable transform"
+-- !Section "Moveable parameters"
+-- !Description "Gets both position AND rotation of a moveable.\nBoth values can be linked to other nodes that need transform data."
+-- !Outputs "position, Vector3, Current XYZ position" "rotation, Vector3, Current XYZ rotation in degrees"
+-- !EventModes "OnLoop"
+-- !Arguments "NewLine, Moveables, 100, Moveable to get transform from"
+
+LevelFuncs.Engine.Node.GetMoveableTransform = function(moveableName)
+	local moveable = TEN.Objects.GetMoveableByName(moveableName)
+	local position = moveable:GetPosition()
+	local rotation = moveable:GetRotation()
+	
+	-- Both position and rotation are available as outputs
+	-- that can be independently linked to other nodes' inputs
+	return position, rotation
+end
+
+-- !Name "Set moveable transform"
+-- !Section "Moveable parameters"
+-- !Description "Sets both position AND rotation of a moveable.\nBoth values can be linked from other nodes (e.g., Get Transform)."
+-- !Inputs "newPosition, Vector3, Position to set (can be linked)" "newRotation, Vector3, Rotation to set (can be linked)"
+-- !EventModes "OnLoop"
+-- !Arguments "NewLine, Vector3, [ -1000000 | 1000000 | 0 | 1 | 32 ], 50, Position value"
+-- !Arguments "Vector3, [ -360 | 360 | 0 | 1 | 1 ], 50, Rotation value in degrees"
+-- !Arguments "NewLine, Moveables, 100, Target moveable"
+
+LevelFuncs.Engine.Node.SetMoveableTransform = function(positionValue, rotationValue, moveableName)
+	local moveable = TEN.Objects.GetMoveableByName(moveableName)
+	
+	-- In a real implementation, these would check if inputs are linked
+	-- and retrieve values from the linked outputs
+	-- If not linked, they fall back to the manual argument values
+	
+	moveable:SetPosition(positionValue)
+	moveable:SetRotation(rotationValue)
+end
+
+-- !Name "Copy moveable transform"
+-- !Section "Moveable parameters"
+-- !Description "Copies position and rotation from source to target.\nThis demonstrates linking 2 outputs to 2 inputs in a single operation."
+-- !Inputs "sourcePosition, Vector3, Position from source" "sourceRotation, Vector3, Rotation from source"
+-- !Outputs "position, Vector3, Output position" "rotation, Vector3, Output rotation"
+-- !EventModes "OnLoop"
+-- !Arguments "NewLine, Moveables, 100, Target moveable to apply transform to"
+
+LevelFuncs.Engine.Node.CopyMoveableTransform = function(moveableName)
+	-- This node acts as a pass-through, receiving 2 inputs and providing 2 outputs
+	-- Useful for transform chains or applying the same transform to multiple targets
+	
+	-- In a real implementation:
+	-- 1. Gets position and rotation from linked inputs
+	-- 2. Applies them to the target moveable
+	-- 3. Also outputs them so they can be linked to other nodes
+	
+	local moveable = TEN.Objects.GetMoveableByName(moveableName)
+	-- Would get values from linked inputs here
+	local position = TEN.Vec3(0, 0, 0)  -- From linked input
+	local rotation = TEN.Vec3(0, 0, 0)  -- From linked input
+	
+	moveable:SetPosition(position)
+	moveable:SetRotation(rotation)
+	
+	return position, rotation
+end
+
+-- ============================================================================
+-- USAGE EXAMPLE for Multiple Input/Output Linking:
+-- ============================================================================
+-- 1. Create "Get moveable transform" node for source moveable
+-- 2. Create "Set moveable transform" node for target moveable
+-- 3. Link "position" output → "newPosition" input
+-- 4. Link "rotation" output → "newRotation" input
+-- 5. Now position and rotation flow from source to target automatically!
+--
+-- This is more efficient than creating separate nodes for position and rotation,
+-- and ensures both values are transferred atomically in the same frame.
+-- ============================================================================

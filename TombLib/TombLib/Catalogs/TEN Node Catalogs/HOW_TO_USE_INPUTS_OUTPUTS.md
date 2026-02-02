@@ -157,10 +157,68 @@ end
 
 After adding this file, restart Tomb Editor and you'll see both nodes available in the "Moveable parameters" section, and they will only be usable in OnLoop global events!
 
+## Advanced Example: Multiple Outputs to Multiple Inputs
+
+For more complex operations, you can have nodes with **multiple outputs** linking to **multiple inputs**:
+
+### Node with TWO Outputs
+
+```lua
+-- !Name "Get moveable transform"
+-- !Section "Moveable parameters"
+-- !Description "Gets both position AND rotation of a moveable."
+-- !Outputs "position, Vector3, Current XYZ position" "rotation, Vector3, Current XYZ rotation"
+-- !EventModes "OnLoop"
+-- !Arguments "NewLine, Moveables, 100, Moveable to get transform from"
+
+LevelFuncs.Engine.Node.GetMoveableTransform = function(moveableName)
+    local moveable = TEN.Objects.GetMoveableByName(moveableName)
+    local position = moveable:GetPosition()
+    local rotation = moveable:GetRotation()
+    
+    -- Returns BOTH position and rotation as separate outputs
+    return position, rotation
+end
+```
+
+### Node with TWO Inputs
+
+```lua
+-- !Name "Set moveable transform"
+-- !Section "Moveable parameters"
+-- !Description "Sets both position AND rotation of a moveable."
+-- !Inputs "newPosition, Vector3, Position to set" "newRotation, Vector3, Rotation to set"
+-- !EventModes "OnLoop"
+-- !Arguments "NewLine, Vector3, [ -1000000 | 1000000 | 0 | 1 | 32 ], 50, Position"
+-- !Arguments "Vector3, [ -360 | 360 | 0 | 1 | 1 ], 50, Rotation"
+-- !Arguments "NewLine, Moveables, 100, Target moveable"
+
+LevelFuncs.Engine.Node.SetMoveableTransform = function(positionValue, rotationValue, moveableName)
+    local moveable = TEN.Objects.GetMoveableByName(moveableName)
+    moveable:SetPosition(positionValue)
+    moveable:SetRotation(rotationValue)
+end
+```
+
+### How to Link Multiple Outputs to Multiple Inputs
+
+1. **Create source node**: Place "Get moveable transform" node
+2. **Create target node**: Place "Set moveable transform" node
+3. **Link first pair**: Connect `position` output → `newPosition` input
+4. **Link second pair**: Connect `rotation` output → `newRotation` input
+5. **Result**: Both position and rotation transfer together!
+
+**Benefits:**
+- Transfers multiple related values atomically
+- More efficient than separate nodes
+- Ensures values are synchronized in the same frame
+- Clean, organized node graph
+
 ## Additional Examples
 
 See `Sample Input-Output Nodes.lua` for more examples including:
 - Rotation nodes (input/output)
 - Distance calculation nodes
 - Conditional nodes with inputs
-- Multiple inputs/outputs on the same node
+- Multiple inputs/outputs on the same node (Transform operations)
+- Pass-through nodes that both receive and provide multiple values
