@@ -14,9 +14,9 @@ namespace TombLib.LevelData.VisualScripting
     public class InputVariable
     {
         public string Name { get; set; } = string.Empty;
-        public string LinkedOutputNodeName { get; set; } = string.Empty;  // Name of the node providing the output
+        public Guid LinkedOutputNodeId { get; set; } = Guid.Empty;  // ID of the node providing the output
         public string LinkedOutputName { get; set; } = string.Empty;      // Name of the specific output variable
-        public bool IsLinked => !string.IsNullOrEmpty(LinkedOutputNodeName) && !string.IsNullOrEmpty(LinkedOutputName);
+        public bool IsLinked => LinkedOutputNodeId != Guid.Empty && !string.IsNullOrEmpty(LinkedOutputName);
     }
 
     // Output variable represents a slot that can provide data to another node's input
@@ -29,7 +29,7 @@ namespace TombLib.LevelData.VisualScripting
     // Dynamic arguments that can be set by user or linked from another node
     public class DynamicData
     {
-        public Dictionary<string, string> UserDefinedArguments { get; private set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> UserDefinedArguments { get; } = new Dictionary<string, string>();
     }
 
     // Every node in visual trigger has this set of parameters. Name and color are
@@ -48,6 +48,9 @@ namespace TombLib.LevelData.VisualScripting
     public abstract class TriggerNode : ICloneable
     {
         public static int DefaultSize = 400;
+
+        // Unique identifier for each node instance to support unambiguous linking
+        public Guid Id { get; private set; } = Guid.NewGuid();
 
         public string Name { get; set; } = string.Empty;
         public int Size { get; set; } = DefaultSize;
@@ -84,6 +87,8 @@ namespace TombLib.LevelData.VisualScripting
         public virtual TriggerNode Clone()
         {
             var node = (TriggerNode)MemberwiseClone();
+            // Generate new ID for cloned node to ensure uniqueness
+            node.Id = Guid.NewGuid();
             node.Arguments = new List<TriggerNodeArgument>(Arguments);
             
             // Clone new properties
@@ -93,7 +98,7 @@ namespace TombLib.LevelData.VisualScripting
                 node.Inputs.Add(new InputVariable
                 {
                     Name = input.Name,
-                    LinkedOutputNodeName = input.LinkedOutputNodeName,
+                    LinkedOutputNodeId = input.LinkedOutputNodeId,
                     LinkedOutputName = input.LinkedOutputName
                 });
             }
@@ -135,9 +140,23 @@ namespace TombLib.LevelData.VisualScripting
 
             Arguments.ForEach(a => { if (!string.IsNullOrEmpty(a.Value)) hash ^= a.Value.GetHashCode(); });
             
-            // Include new properties in hash code
-            Inputs.ForEach(i => { if (!string.IsNullOrEmpty(i.Name)) hash ^= i.Name.GetHashCode(); });
-            Outputs.ForEach(o => { if (!string.IsNullOrEmpty(o.Name)) hash ^= o.Name.GetHashCode(); });
+            // Include new properties in hash code with all relevant fields
+            Inputs.ForEach(i => 
+            { 
+                if (!string.IsNullOrEmpty(i.Name)) 
+                    hash ^= i.Name.GetHashCode(); 
+                if (i.LinkedOutputNodeId != Guid.Empty)
+                    hash ^= i.LinkedOutputNodeId.GetHashCode();
+                if (!string.IsNullOrEmpty(i.LinkedOutputName))
+                    hash ^= i.LinkedOutputName.GetHashCode();
+            });
+            Outputs.ForEach(o => 
+            { 
+                if (!string.IsNullOrEmpty(o.Name)) 
+                    hash ^= o.Name.GetHashCode(); 
+                if (!string.IsNullOrEmpty(o.Type))
+                    hash ^= o.Type.GetHashCode();
+            });
             foreach (var kvp in DynamicArguments.UserDefinedArguments)
             {
                 if (!string.IsNullOrEmpty(kvp.Value))
@@ -224,6 +243,8 @@ namespace TombLib.LevelData.VisualScripting
                 ScreenPosition = ScreenPosition
             };
 
+            // Generate new ID for cloned node to ensure uniqueness
+            node.Id = Guid.NewGuid();
             node.Arguments.AddRange(Arguments);
             
             // Clone new properties
@@ -232,7 +253,7 @@ namespace TombLib.LevelData.VisualScripting
                 node.Inputs.Add(new InputVariable
                 {
                     Name = input.Name,
-                    LinkedOutputNodeName = input.LinkedOutputNodeName,
+                    LinkedOutputNodeId = input.LinkedOutputNodeId,
                     LinkedOutputName = input.LinkedOutputName
                 });
             }

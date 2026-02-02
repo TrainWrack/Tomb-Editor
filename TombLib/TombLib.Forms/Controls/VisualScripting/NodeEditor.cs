@@ -417,8 +417,8 @@ namespace TombLib.Controls.VisualScripting
                 targetNode.Inputs.Add(input);
             }
 
-            // Link the input to the output
-            input.LinkedOutputNodeName = sourceNode.Name;
+            // Link the input to the output using unique node ID
+            input.LinkedOutputNodeId = sourceNode.Id;
             input.LinkedOutputName = outputName;
 
             return true;
@@ -435,7 +435,7 @@ namespace TombLib.Controls.VisualScripting
             var input = node.Inputs.FirstOrDefault(i => i.Name == inputName);
             if (input != null)
             {
-                input.LinkedOutputNodeName = string.Empty;
+                input.LinkedOutputNodeId = Guid.Empty;
                 input.LinkedOutputName = string.Empty;
             }
         }
@@ -451,12 +451,12 @@ namespace TombLib.Controls.VisualScripting
             var input = node.Inputs.FirstOrDefault(i => i.Name == inputName);
             if (input != null && input.IsLinked)
             {
-                // Try to find the linked source node and get its output value
-                var sourceNode = Nodes.FirstOrDefault(n => n.Name == input.LinkedOutputNodeName);
+                // Try to find the linked source node by unique ID
+                var sourceNode = Nodes.FirstOrDefault(n => n.Id == input.LinkedOutputNodeId);
                 if (sourceNode != null)
                 {
                     // In a real implementation, this would evaluate the output value
-                    return $"[Linked from {input.LinkedOutputNodeName}.{input.LinkedOutputName}]";
+                    return $"[Linked from {sourceNode.Name}.{input.LinkedOutputName}]";
                 }
             }
 
