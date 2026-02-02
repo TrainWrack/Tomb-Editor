@@ -2,6 +2,22 @@
 
 This example demonstrates how to create nodes that have **multiple outputs** and **multiple inputs**, and how to link them together.
 
+## ⚠️ Important: Input vs Argument Priority
+
+Before diving into examples, understand this key concept:
+
+**When a node has BOTH `!Inputs` AND `!Arguments`:**
+- 🔗 **Linked input takes priority** - If input is connected, it uses the linked value
+- 📝 **Argument is fallback** - If input not connected, it uses the manual argument
+
+This means parameters like `positionValue` automatically receive either:
+1. The linked output value (if input is connected), OR
+2. The manual argument value (if input not connected)
+
+**See `FAQ_INPUT_LINKING.md` for complete explanation of this behavior!**
+
+---
+
 ## Overview
 
 Sometimes you need to transfer multiple related values between nodes. For example:

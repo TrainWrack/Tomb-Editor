@@ -2,6 +2,31 @@
 
 This guide shows you how to create nodes with the new input/output linking system and event mode restrictions.
 
+## ⚠️ CRITICAL: Understanding Input vs Argument Priority
+
+**When a node has BOTH `!Inputs` and `!Arguments`, the priority is:**
+
+```
+Linked Input Value > Manual Argument Value
+```
+
+**What this means:**
+- ✅ **IF input is linked**: Function parameter receives value from the linked node's output
+- ✅ **IF input NOT linked**: Function parameter receives value from the manual argument UI control
+- The argument provides a **fallback** default when no link exists
+
+**Example:**
+```lua
+-- !Inputs "newPosition, Vector3, Position to set (can be linked)"
+-- !Arguments "NewLine, Vector3, Position value"
+function(positionValue)
+    -- positionValue = linked input (if connected) OR manual argument (if not)
+```
+
+👉 **See `FAQ_INPUT_LINKING.md` for complete details on this behavior!**
+
+---
+
 ## Quick Example: Position Nodes
 
 Here's exactly how to define the **GetPosition** and **ModifyPosition** nodes you requested, restricted to **OnLoop** events only:

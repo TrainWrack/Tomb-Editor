@@ -1,5 +1,28 @@
 -- Sample node catalog demonstrating input/output variable linking and event mode restrictions
 -- These nodes showcase the new !Inputs, !Outputs, and !EventModes metadata tags
+--
+-- ============================================================================
+-- IMPORTANT: How Inputs and Arguments Work Together
+-- ============================================================================
+-- When a node has BOTH !Inputs and !Arguments for the same data:
+--
+-- PRIORITY: Linked Input > Manual Argument
+--
+-- - IF input is linked → Function parameter receives value from linked output
+-- - IF input NOT linked → Function parameter receives manual argument value
+--
+-- This allows nodes to work BOTH standalone (using arguments) AND dynamically
+-- (using linked inputs). The arguments provide default/fallback values.
+--
+-- Example:
+--   !Inputs "newPosition, Vector3, Position to set"
+--   !Arguments "NewLine, Vector3, Position value"
+--   function(positionValue)
+--     -- positionValue = linked input OR manual argument (priority to linked)
+--
+-- See FAQ_INPUT_LINKING.md for detailed explanation!
+-- ============================================================================
+
 
 -- !Name "Get moveable position"
 -- !Section "Moveable parameters"
@@ -161,9 +184,20 @@ end
 LevelFuncs.Engine.Node.SetMoveableTransform = function(positionValue, rotationValue, moveableName)
 	local moveable = TEN.Objects.GetMoveableByName(moveableName)
 	
-	-- In a real implementation, these would check if inputs are linked
-	-- and retrieve values from the linked outputs
-	-- If not linked, they fall back to the manual argument values
+	-- RUNTIME BEHAVIOR:
+	-- The engine automatically resolves parameter values with this priority:
+	--   1. IF input "newPosition" is linked → positionValue gets linked output value
+	--   2. IF input "newPosition" NOT linked → positionValue gets manual argument value
+	-- Same logic applies to rotationValue and the "newRotation" input
+	-- 
+	-- This means:
+	-- - When linked: Manual arguments are IGNORED (but still visible in UI)
+	-- - When not linked: Manual arguments are USED as fallback
+	-- - User can mix: link position but manually set rotation, or vice versa
+	
+	moveable:SetPosition(positionValue)
+	moveable:SetRotation(rotationValue)
+end
 	
 	moveable:SetPosition(positionValue)
 	moveable:SetRotation(rotationValue)

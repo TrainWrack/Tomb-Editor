@@ -83,6 +83,10 @@ Comment metadata entry reference (metadata block is indicated by a keyword which
    - **DataType**: Type hint (Vector3, Numerical, String, Boolean, Color, etc.)
    - **Description**: Tooltip description for the input
    
+   **IMPORTANT**: When a node has BOTH !Inputs and !Arguments for the same parameter, the linked input takes 
+   priority over the manual argument. If the input is not linked, the argument value is used as fallback.
+   See `FAQ_INPUT_LINKING.md` for detailed explanation of this behavior.
+   
  - **!Outputs "NAME, TYPE, DESC"** - defines output variable slots that can provide data to other nodes' inputs.
    Multiple outputs can be defined by separating them with quotes. Format is the same as !Inputs.
    
