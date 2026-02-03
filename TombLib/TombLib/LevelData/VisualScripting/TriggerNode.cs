@@ -50,7 +50,7 @@ namespace TombLib.LevelData.VisualScripting
         public static int DefaultSize = 400;
 
         // Unique identifier for each node instance to support unambiguous linking
-        public Guid Id { get; private set; } = Guid.NewGuid();
+        public Guid Id { get; protected set; } = Guid.NewGuid();
 
         public string Name { get; set; } = string.Empty;
         public int Size { get; set; } = DefaultSize;
