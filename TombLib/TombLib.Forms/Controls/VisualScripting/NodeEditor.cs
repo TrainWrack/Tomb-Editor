@@ -20,7 +20,11 @@ namespace TombLib.Controls.VisualScripting
     {
         Previous,
         Next,
-        Else
+        Else,
+        // Dynamic input/output slots start at index 100 to avoid conflicts
+        // Actual slot index is (mode - InputBase) or (mode - OutputBase)
+        InputBase = 100,
+        OutputBase = 200
     }
 
     public partial class NodeEditor : UserControl
@@ -58,6 +62,10 @@ namespace TombLib.Controls.VisualScripting
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ConnectionMode HotNodeMode { get; set; } = ConnectionMode.Previous;
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public int HotNodeSlotIndex { get; set; } = -1; // For input/output slot index
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -1032,6 +1040,136 @@ namespace TombLib.Controls.VisualScripting
             }
         }
 
+        private void DrawInputOutputLabels(PaintEventArgs e, VisibleNodeBase node)
+        {
+            if (!node.Visible)
+                return;
+
+            using (var brush = new SolidBrush(Colors.LightText.ToFloat3Color().ToWinFormsColor(0.3f)))
+            {
+                // Draw INPUT labels at TOP of node
+                if (node.Node.Inputs.Count > 0)
+                {
+                    int inputCount = node.Node.Inputs.Count;
+                    int nodeWidth = node.Width;
+                    int spacing = nodeWidth / (inputCount + 1);
+
+                    for (int i = 0; i < inputCount; i++)
+                    {
+                        var input = node.Node.Inputs[i];
+                        var size = TextRenderer.MeasureText(input.Name, Font);
+                        
+                        // Position above the node
+                        int xPos = node.Location.X + spacing * (i + 1) - size.Width / 2;
+                        int yPos = node.Location.Y - (int)(size.Height * 1.6f);
+                        
+                        var rect = new Rectangle(xPos, yPos, size.Width, size.Height);
+
+                        // Draw shadow
+                        e.Graphics.DrawImage(Properties.Resources.misc_Shadow,
+                            new Rectangle(xPos, yPos, size.Width, size.Height));
+
+                        // Draw label with different color if linked
+                        var labelBrush = input.IsLinked 
+                            ? new SolidBrush(Colors.LightText.ToFloat3Color().ToWinFormsColor(0.6f)) 
+                            : brush;
+                        
+                        e.Graphics.DrawString(input.Name, Font, labelBrush, rect,
+                            new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
+
+                        if (input.IsLinked)
+                            labelBrush.Dispose();
+                    }
+                }
+
+                // Draw OUTPUT labels at BOTTOM of node
+                if (node.Node.Outputs.Count > 0)
+                {
+                    int outputCount = node.Node.Outputs.Count;
+                    int nodeWidth = node.Width;
+                    int spacing = nodeWidth / (outputCount + 1);
+
+                    for (int i = 0; i < outputCount; i++)
+                    {
+                        var output = node.Node.Outputs[i];
+                        var size = TextRenderer.MeasureText(output.Name, Font);
+                        
+                        // Position below the node
+                        int xPos = node.Location.X + spacing * (i + 1) - size.Width / 2;
+                        int yPos = node.Location.Y + node.Height + (int)(size.Height * 0.4f);
+                        
+                        var rect = new Rectangle(xPos, yPos, size.Width, size.Height);
+
+                        // Draw shadow
+                        e.Graphics.DrawImage(Properties.Resources.misc_Shadow,
+                            new Rectangle(xPos, yPos, size.Width, size.Height));
+
+                        // Draw label
+                        e.Graphics.DrawString(output.Name, Font, brush, rect,
+                            new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
+                    }
+                }
+            }
+        }
+
+        private void DrawInputOutputLinks(PaintEventArgs e, List<VisibleNodeBase> nodes, VisibleNodeBase node)
+        {
+            if (!node.Visible)
+                return;
+
+            // Draw links from this node's inputs to source outputs
+            for (int i = 0; i < node.Node.Inputs.Count; i++)
+            {
+                var input = node.Node.Inputs[i];
+                if (!input.IsLinked)
+                    continue;
+
+                // Find the source node
+                var sourceNode = nodes.FirstOrDefault(n => n.Node.Id == input.LinkedOutputNodeId);
+                if (sourceNode == null)
+                    continue;
+
+                // Find the output index
+                int outputIndex = sourceNode.Node.Outputs.FindIndex(o => o.Name == input.LinkedOutputName);
+                if (outputIndex < 0)
+                    continue;
+
+                // Get connection points
+                var p1 = GetInputOutputPosition(sourceNode, outputIndex, false); // output
+                var p2 = GetInputOutputPosition(node, i, true); // input
+
+                // Draw link with node color
+                DrawLink(e, node.Node.Color, _connectedNodeTransparency, p1, p2);
+            }
+        }
+
+        private PointF[] GetInputOutputPosition(VisibleNodeBase node, int slotIndex, bool isInput)
+        {
+            int nodeWidth = node.Width;
+            int slotCount = isInput ? node.Node.Inputs.Count : node.Node.Outputs.Count;
+            int spacing = nodeWidth / (slotCount + 1);
+            int xCenter = node.Location.X + spacing * (slotIndex + 1);
+            
+            int yPos;
+            if (isInput)
+            {
+                // Input at TOP
+                yPos = node.Location.Y;
+            }
+            else
+            {
+                // Output at BOTTOM
+                yPos = node.Location.Y + node.Height;
+            }
+
+            int gripHalfWidth = 30; // Width of connection point
+            return new PointF[]
+            {
+                new PointF(xCenter - gripHalfWidth, yPos),
+                new PointF(xCenter + gripHalfWidth, yPos)
+            };
+        }
+
         private void DrawVisibleNodeLink(PaintEventArgs e, List<VisibleNodeBase> nodes, VisibleNodeBase node)
         {
             for (int i = 0; i < 2; i++)
@@ -1225,9 +1363,13 @@ namespace TombLib.Controls.VisualScripting
                 // Draw node links antialiased
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
-                // Draw connected nodes
+                // Draw connected nodes (Previous/Next/Else)
                 foreach (var n in nodeList)
                     DrawVisibleNodeLink(e, nodeList, n);
+
+                // Draw input/output links
+                foreach (var n in nodeList)
+                    DrawInputOutputLinks(e, nodeList, n);
 
                 // Draw hot node
                 DrawHotNode(e, nodeList);
@@ -1252,6 +1394,10 @@ namespace TombLib.Controls.VisualScripting
                 // Draw labels (after everything else)
                 foreach (var n in nodeList)
                     DrawHeader(e, n);
+
+                // Draw input/output labels
+                foreach (var n in nodeList)
+                    DrawInputOutputLabels(e, n);
             }
         }
 

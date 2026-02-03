@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using DarkUI.Config;
 using DarkUI.Controls;
 using DarkUI.Extensions;
+using DarkUI.Forms;
 using DarkUI.Icons;
 using TombLib.LevelData;
 using TombLib.LevelData.VisualScripting;
@@ -301,6 +302,9 @@ namespace TombLib.Controls.VisualScripting
             for (int i = 0; i < Node.Arguments.Count; i++)
                 RefreshArgument(i);
 
+            // Disable argument controls that have linked inputs
+            UpdateArgumentControlStates();
+
             foreach (var sub in WinFormsUtils.AllSubControls(this))
                 sub.MouseDown += Ctrl_RightClick;
 
@@ -310,6 +314,39 @@ namespace TombLib.Controls.VisualScripting
             Visible = true;
             Invalidate();
             Editor?.Invalidate();
+        }
+
+        /// <summary>
+        /// Updates the enabled/disabled state of argument controls based on whether
+        /// their corresponding inputs are linked
+        /// </summary>
+        private void UpdateArgumentControlStates()
+        {
+            var func = cbFunction.SelectedItem as NodeFunction;
+            if (func == null)
+                return;
+
+            // For each argument, check if there's a corresponding input that is linked
+            for (int i = 0; i < Node.Arguments.Count && i < _argControls.Count; i++)
+            {
+                var argName = Node.Arguments[i].Name;
+                
+                // Find if this argument has a corresponding input
+                var input = Node.Inputs.FirstOrDefault(inp => inp.Name == argName);
+                
+                if (input != null && input.IsLinked)
+                {
+                    // Input is linked - disable the argument control
+                    _argControls[i].Enabled = false;
+                    _argControls[i].BackColor = Color.FromArgb(40, 40, 40); // Darker to show disabled
+                }
+                else
+                {
+                    // Input is not linked - enable the argument control
+                    _argControls[i].Enabled = true;
+                    _argControls[i].BackColor = Color.FromArgb(60, 60, 60); // Normal color
+                }
+            }
         }
 
         private void Ctrl_LocatedItemFound(object sender, EventArgs e)
@@ -716,6 +753,24 @@ namespace TombLib.Controls.VisualScripting
                 ResetArguments();
 
             SpawnUIElements();
+
+            // Validate event mode compatibility and show warning if needed
+            if (Editor != null && !string.IsNullOrEmpty(Editor.CurrentEventMode))
+            {
+                if (Editor.ValidateNodeEventMode(Node, out string warningMessage))
+                {
+                    // Node is compatible
+                }
+                else
+                {
+                    // Show warning dialog
+                    DarkMessageBox.Show(Editor, 
+                        warningMessage, 
+                        "Event Mode Compatibility Warning", 
+                        MessageBoxButtons.OK, 
+                        MessageBoxIcon.Warning);
+                }
+            }
 
             toolTip.SetToolTip(sender as Control, TextExtensions.SingleLineToMultiLine((cbFunction.SelectedItem as NodeFunction)?.Description ?? string.Empty));
 
