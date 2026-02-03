@@ -1047,27 +1047,28 @@ namespace TombLib.Controls.VisualScripting
 
             using (var brush = new SolidBrush(Colors.LightText.ToFloat3Color().ToWinFormsColor(0.3f)))
             {
-                // Draw INPUT labels at TOP of node (higher up to match grip position)
+                // Draw INPUT labels at TOP, positioned like then/else labels
                 if (node.Node.Inputs.Count > 0)
                 {
-                    int inputCount = node.Node.Inputs.Count;
-                    int nodeWidth = node.Width;
-                    int spacing = nodeWidth / (inputCount + 1);
-
-                    for (int i = 0; i < inputCount; i++)
+                    for (int i = 0; i < node.Node.Inputs.Count; i++)
                     {
                         var input = node.Node.Inputs[i];
                         var size = TextRenderer.MeasureText(input.Name, Font);
                         
-                        // Position higher up to match the new grip position
-                        int xPos = node.Location.X + spacing * (i + 1) - size.Width / 2;
-                        int yPos = node.Location.Y - (int)(size.Height * 2.5f);
+                        // Get the grip position for this input
+                        var inputMode = (ConnectionMode)((int)ConnectionMode.InputBase + i);
+                        var inputPoint = node.GetNodeScreenPosition(inputMode);
                         
-                        var rect = new Rectangle(xPos, yPos, size.Width, size.Height);
+                        // Position label below the grip, like then/else
+                        int rectX = (int)inputPoint[0].X;
+                        int rectWidth = (int)(inputPoint[1].X - inputPoint[0].X);
+                        int rectY = node.Location.Y + (int)(size.Height * 0.4f);
+                        
+                        var rect = new Rectangle(rectX, rectY, rectWidth, size.Height);
 
                         // Draw shadow
                         e.Graphics.DrawImage(Properties.Resources.misc_Shadow,
-                            new Rectangle(xPos, yPos, size.Width, size.Height));
+                            new Rectangle((int)((inputPoint[0].X + inputPoint[1].X) / 2) - size.Width / 2, rectY, size.Width, size.Height));
 
                         // Draw label with different color if linked
                         var labelBrush = input.IsLinked 
@@ -1082,27 +1083,28 @@ namespace TombLib.Controls.VisualScripting
                     }
                 }
 
-                // Draw OUTPUT labels at BOTTOM of node (lower down to match grip position)
+                // Draw OUTPUT labels at BOTTOM, positioned like then/else labels
                 if (node.Node.Outputs.Count > 0)
                 {
-                    int outputCount = node.Node.Outputs.Count;
-                    int nodeWidth = node.Width;
-                    int spacing = nodeWidth / (outputCount + 1);
-
-                    for (int i = 0; i < outputCount; i++)
+                    for (int i = 0; i < node.Node.Outputs.Count; i++)
                     {
                         var output = node.Node.Outputs[i];
                         var size = TextRenderer.MeasureText(output.Name, Font);
                         
-                        // Position lower down to match the new grip position
-                        int xPos = node.Location.X + spacing * (i + 1) - size.Width / 2;
-                        int yPos = node.Location.Y + node.Height + (int)(size.Height * 1.2f);
+                        // Get the grip position for this output
+                        var outputMode = (ConnectionMode)((int)ConnectionMode.OutputBase + i);
+                        var outputPoint = node.GetNodeScreenPosition(outputMode);
                         
-                        var rect = new Rectangle(xPos, yPos, size.Width, size.Height);
+                        // Position label below the grip, like then/else
+                        int rectX = (int)outputPoint[0].X;
+                        int rectWidth = (int)(outputPoint[1].X - outputPoint[0].X);
+                        int rectY = node.Location.Y + node.Height + (int)(size.Height * 0.4f);
+                        
+                        var rect = new Rectangle(rectX, rectY, rectWidth, size.Height);
 
                         // Draw shadow
                         e.Graphics.DrawImage(Properties.Resources.misc_Shadow,
-                            new Rectangle(xPos, yPos, size.Width, size.Height));
+                            new Rectangle((int)((outputPoint[0].X + outputPoint[1].X) / 2) - size.Width / 2, rectY, size.Width, size.Height));
 
                         // Draw label
                         e.Graphics.DrawString(output.Name, Font, brush, rect,

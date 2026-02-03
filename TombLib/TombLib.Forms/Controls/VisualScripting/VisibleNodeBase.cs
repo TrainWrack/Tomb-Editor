@@ -86,38 +86,76 @@ namespace TombLib.Controls.VisualScripting
         {
             _grips.Clear();
             
-            // Grip 0: Previous connection (top center)
-            _grips.Add(new Rectangle(Width / 2 - _gripWidth / 2, 0, _gripWidth, _gripHeight));
-            
             // Only add input/output grips if Node is initialized
             // (Node is null during initial control construction)
-            if (Node != null)
+            if (Node != null && Node.Inputs.Count > 0)
             {
-                // Add grips for inputs (at top, ABOVE Previous to avoid overlap)
-                // These will be accessible via ConnectionMode.InputBase + inputIndex
-                for (int i = 0; i < Node.Inputs.Count; i++)
-                {
-                    int slotCount = Node.Inputs.Count;
-                    int spacing = Width / (slotCount + 1);
-                    int xCenter = spacing * (i + 1);
-                    int gripHalfWidth = 30;
-                    
-                    // Position input grips higher up to avoid overlapping with Previous grip
-                    // Previous is at y=0, so we put inputs at y=-(_gripHeight*3) with height=_gripHeight*2
-                    _grips.Add(new Rectangle(xCenter - gripHalfWidth, -(_gripHeight * 3), gripHalfWidth * 2, _gripHeight * 2));
-                }
+                // Add grips for inputs at TOP, spread horizontally, avoiding center
+                // Following the pattern of then/else grips in conditional nodes
+                int inputCount = Node.Inputs.Count;
                 
-                // Add grips for outputs (at bottom, starting from index 200)
-                // These will be accessible via ConnectionMode.OutputBase + outputIndex
-                for (int i = 0; i < Node.Outputs.Count; i++)
+                // Divide width into sections, reserve center for Previous
+                // Inputs go on the left and right sides
+                for (int i = 0; i < inputCount; i++)
                 {
-                    int slotCount = Node.Outputs.Count;
-                    int spacing = Width / (slotCount + 1);
-                    int xCenter = spacing * (i + 1);
-                    int gripHalfWidth = 30;
+                    // Spread inputs across left and right portions
+                    // If even number: half on left, half on right
+                    // If odd: favor left side
+                    int section;
+                    int sectionsPerSide = (inputCount + 1) / 2; // Round up for left side
                     
-                    // Position output grips below the node with some spacing
-                    _grips.Add(new Rectangle(xCenter - gripHalfWidth, Height + _gripHeight, gripHalfWidth * 2, _gripHeight * 2));
+                    if (i < sectionsPerSide)
+                    {
+                        // Left side inputs
+                        section = i;
+                        int leftWidth = Width / 3;
+                        int xPos = (leftWidth * (section + 1)) / (sectionsPerSide + 1);
+                        _grips.Add(new Rectangle(xPos - _gripWidth / 2, 0, _gripWidth, _gripHeight));
+                    }
+                    else
+                    {
+                        // Right side inputs
+                        section = i - sectionsPerSide;
+                        int rightStart = Width * 2 / 3;
+                        int rightWidth = Width / 3;
+                        int xPos = rightStart + (rightWidth * (section + 1)) / (inputCount - sectionsPerSide + 1);
+                        _grips.Add(new Rectangle(xPos - _gripWidth / 2, 0, _gripWidth, _gripHeight));
+                    }
+                }
+            }
+            
+            // Grip for Previous connection (top center) - added after inputs
+            _grips.Add(new Rectangle(Width / 2 - _gripWidth / 2, 0, _gripWidth, _gripHeight));
+            
+            if (Node != null && Node.Outputs.Count > 0)
+            {
+                // Add grips for outputs at BOTTOM, spread horizontally
+                // Will be placed to avoid Next grip position (center bottom)
+                int outputCount = Node.Outputs.Count;
+                
+                // Spread outputs across width, avoiding center
+                for (int i = 0; i < outputCount; i++)
+                {
+                    int section;
+                    int sectionsPerSide = (outputCount + 1) / 2;
+                    
+                    if (i < sectionsPerSide)
+                    {
+                        // Left side outputs
+                        section = i;
+                        int leftWidth = Width / 3;
+                        int xPos = (leftWidth * (section + 1)) / (sectionsPerSide + 1);
+                        _grips.Add(new Rectangle(xPos - _gripWidth / 2, Height - _gripHeight, _gripWidth, _gripHeight));
+                    }
+                    else
+                    {
+                        // Right side outputs
+                        section = i - sectionsPerSide;
+                        int rightStart = Width * 2 / 3;
+                        int rightWidth = Width / 3;
+                        int xPos = rightStart + (rightWidth * (section + 1)) / (outputCount - sectionsPerSide + 1);
+                        _grips.Add(new Rectangle(xPos - _gripWidth / 2, Height - _gripHeight, _gripWidth, _gripHeight));
+                    }
                 }
             }
             
@@ -459,19 +497,38 @@ namespace TombLib.Controls.VisualScripting
                 return result;
 
             // Handle dynamic input/output modes
-            int gripIndex = (int)mode;
+            int gripIndex;
+            int modeInt = (int)mode;
             
-            // For inputs: mode = InputBase + inputIndex, grip index = 1 + inputIndex
-            if (gripIndex >= (int)ConnectionMode.InputBase && gripIndex < (int)ConnectionMode.OutputBase)
+            // For inputs: mode = InputBase + inputIndex, grip index = inputIndex
+            if (modeInt >= (int)ConnectionMode.InputBase && modeInt < (int)ConnectionMode.OutputBase)
             {
-                int inputIndex = gripIndex - (int)ConnectionMode.InputBase;
-                gripIndex = 1 + inputIndex; // Skip Previous grip (index 0)
+                int inputIndex = modeInt - (int)ConnectionMode.InputBase;
+                gripIndex = inputIndex;
             }
-            // For outputs: mode = OutputBase + outputIndex, grip index = 1 + inputCount + outputIndex
-            else if (gripIndex >= (int)ConnectionMode.OutputBase)
+            // For outputs: mode = OutputBase + outputIndex, grip index = inputCount + 1 + outputIndex
+            else if (modeInt >= (int)ConnectionMode.OutputBase)
             {
-                int outputIndex = gripIndex - (int)ConnectionMode.OutputBase;
-                gripIndex = 1 + Node.Inputs.Count + outputIndex;
+                int outputIndex = modeInt - (int)ConnectionMode.OutputBase;
+                gripIndex = Node.Inputs.Count + 1 + outputIndex;
+            }
+            // For Previous: grip index = inputCount
+            else if (mode == ConnectionMode.Previous)
+            {
+                gripIndex = Node.Inputs.Count;
+            }
+            // For Next/Else: after all inputs, Previous, and outputs
+            else if (mode == ConnectionMode.Next)
+            {
+                gripIndex = Node.Inputs.Count + 1 + Node.Outputs.Count;
+            }
+            else if (mode == ConnectionMode.Else)
+            {
+                gripIndex = Node.Inputs.Count + 1 + Node.Outputs.Count + 1;
+            }
+            else
+            {
+                gripIndex = Node.Inputs.Count; // Default to Previous
             }
 
             if (_grips.Count < gripIndex + 1)
@@ -745,31 +802,35 @@ namespace TombLib.Controls.VisualScripting
         /// </summary>
         private ConnectionMode GripToConnectionMode(int gripIndex)
         {
-            // Grip 0 is always Previous
-            if (gripIndex == 0)
-                return ConnectionMode.Previous;
-            
-            // If Node is not initialized yet, return Previous as default
+            // If Node is not initialized yet, default to Previous
             if (Node == null)
                 return ConnectionMode.Previous;
             
-            // Grips 1 to inputCount are inputs
-            if (gripIndex >= 1 && gripIndex <= Node.Inputs.Count)
+            int inputCount = Node.Inputs.Count;
+            int outputCount = Node.Outputs.Count;
+            
+            // Grips are ordered: [Input0...InputN-1] [Previous] [Output0...OutputM-1] [Next] [Else]
+            
+            // Check if it's an input grip (first N grips)
+            if (gripIndex < inputCount)
             {
-                int inputIndex = gripIndex - 1;
-                return (ConnectionMode)((int)ConnectionMode.InputBase + inputIndex);
+                return (ConnectionMode)((int)ConnectionMode.InputBase + gripIndex);
             }
             
-            // Grips after inputs are outputs
-            if (gripIndex > Node.Inputs.Count && gripIndex <= Node.Inputs.Count + Node.Outputs.Count)
+            // Previous grip is at index inputCount
+            if (gripIndex == inputCount)
+                return ConnectionMode.Previous;
+            
+            // Check if it's an output grip (after Previous, before Next/Else)
+            int outputGripStart = inputCount + 1;
+            if (gripIndex >= outputGripStart && gripIndex < outputGripStart + outputCount)
             {
-                int outputIndex = gripIndex - 1 - Node.Inputs.Count;
+                int outputIndex = gripIndex - outputGripStart;
                 return (ConnectionMode)((int)ConnectionMode.OutputBase + outputIndex);
             }
             
-            // For conditional nodes, Next and Else are added by VisibleNodeCondition
-            // Grip indices continue after outputs
-            int nextElseOffset = 1 + Node.Inputs.Count + Node.Outputs.Count;
+            // For conditional nodes, Next and Else are added by VisibleNodeCondition after outputs
+            int nextElseOffset = inputCount + 1 + outputCount;
             if (gripIndex == nextElseOffset)
                 return ConnectionMode.Next;
             if (gripIndex == nextElseOffset + 1)
