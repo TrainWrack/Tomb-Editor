@@ -1047,7 +1047,7 @@ namespace TombLib.Controls.VisualScripting
 
             using (var brush = new SolidBrush(Colors.LightText.ToFloat3Color().ToWinFormsColor(0.3f)))
             {
-                // Draw INPUT labels at TOP, positioned like then/else labels
+                // Draw INPUT labels at TOP, positioned ABOVE the node (opposite of then/else which are below)
                 if (node.Node.Inputs.Count > 0)
                 {
                     for (int i = 0; i < node.Node.Inputs.Count; i++)
@@ -1059,10 +1059,10 @@ namespace TombLib.Controls.VisualScripting
                         var inputMode = (ConnectionMode)((int)ConnectionMode.InputBase + i);
                         var inputPoint = node.GetNodeScreenPosition(inputMode);
                         
-                        // Position label below the grip, like then/else
+                        // Position label ABOVE the node top (grips are at y=0, so labels go above)
                         int rectX = (int)inputPoint[0].X;
                         int rectWidth = (int)(inputPoint[1].X - inputPoint[0].X);
-                        int rectY = node.Location.Y + (int)(size.Height * 0.4f);
+                        int rectY = node.Location.Y - (int)(size.Height * 1.2f);
                         
                         var rect = new Rectangle(rectX, rectY, rectWidth, size.Height);
 
