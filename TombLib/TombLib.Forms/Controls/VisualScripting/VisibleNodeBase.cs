@@ -89,28 +89,33 @@ namespace TombLib.Controls.VisualScripting
             // Grip 0: Previous connection (top center)
             _grips.Add(new Rectangle(Width / 2 - _gripWidth / 2, 0, _gripWidth, _gripHeight));
             
-            // Add grips for inputs (at top, starting from index 100)
-            // These will be accessible via ConnectionMode.InputBase + inputIndex
-            for (int i = 0; i < Node.Inputs.Count; i++)
+            // Only add input/output grips if Node is initialized
+            // (Node is null during initial control construction)
+            if (Node != null)
             {
-                int slotCount = Node.Inputs.Count;
-                int spacing = Width / (slotCount + 1);
-                int xCenter = spacing * (i + 1);
-                int gripHalfWidth = 30;
+                // Add grips for inputs (at top, starting from index 100)
+                // These will be accessible via ConnectionMode.InputBase + inputIndex
+                for (int i = 0; i < Node.Inputs.Count; i++)
+                {
+                    int slotCount = Node.Inputs.Count;
+                    int spacing = Width / (slotCount + 1);
+                    int xCenter = spacing * (i + 1);
+                    int gripHalfWidth = 30;
+                    
+                    _grips.Add(new Rectangle(xCenter - gripHalfWidth, -_gripHeight, gripHalfWidth * 2, _gripHeight * 2));
+                }
                 
-                _grips.Add(new Rectangle(xCenter - gripHalfWidth, -_gripHeight, gripHalfWidth * 2, _gripHeight * 2));
-            }
-            
-            // Add grips for outputs (at bottom, starting from index 200)
-            // These will be accessible via ConnectionMode.OutputBase + outputIndex
-            for (int i = 0; i < Node.Outputs.Count; i++)
-            {
-                int slotCount = Node.Outputs.Count;
-                int spacing = Width / (slotCount + 1);
-                int xCenter = spacing * (i + 1);
-                int gripHalfWidth = 30;
-                
-                _grips.Add(new Rectangle(xCenter - gripHalfWidth, Height - _gripHeight, gripHalfWidth * 2, _gripHeight * 2));
+                // Add grips for outputs (at bottom, starting from index 200)
+                // These will be accessible via ConnectionMode.OutputBase + outputIndex
+                for (int i = 0; i < Node.Outputs.Count; i++)
+                {
+                    int slotCount = Node.Outputs.Count;
+                    int spacing = Width / (slotCount + 1);
+                    int xCenter = spacing * (i + 1);
+                    int gripHalfWidth = 30;
+                    
+                    _grips.Add(new Rectangle(xCenter - gripHalfWidth, Height - _gripHeight, gripHalfWidth * 2, _gripHeight * 2));
+                }
             }
             
             Invalidate();
@@ -739,6 +744,10 @@ namespace TombLib.Controls.VisualScripting
         {
             // Grip 0 is always Previous
             if (gripIndex == 0)
+                return ConnectionMode.Previous;
+            
+            // If Node is not initialized yet, return Previous as default
+            if (Node == null)
                 return ConnectionMode.Previous;
             
             // Grips 1 to inputCount are inputs
