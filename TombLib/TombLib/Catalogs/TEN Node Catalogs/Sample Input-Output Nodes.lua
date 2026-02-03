@@ -243,3 +243,66 @@ end
 -- This is more efficient than creating separate nodes for position and rotation,
 -- and ensures both values are transferred atomically in the same frame.
 -- ============================================================================
+
+-- ============================================================================
+-- ADVANCED: Selective Parameter Linking (Some Parameters Linkable, Some Not)
+-- ============================================================================
+-- This example shows how to make ONLY SPECIFIC parameters linkable
+-- while keeping others as manual arguments only
+
+-- !Name "Move with calculated speed"
+-- !Section "Moveable parameters"
+-- !Description "Moves a moveable to a position. Position is linkable, but speed is always manual."
+-- !Inputs "targetPosition, Vector3, Target position (can be linked from other nodes)"
+-- !EventModes "OnLoop"
+-- !Arguments "NewLine, Vector3, [ -1000 | 1000 | 0 ], 50, Target position"
+-- !Arguments "Numerical, [ 0 | 100 | 0 ], 25, Movement speed"
+-- !Arguments "Moveables, 25, Moveable to move"
+
+LevelFuncs.Engine.Node.MoveWithCalculatedSpeed = function(targetPosition, speed, moveableName)
+	-- PARAMETER MAPPING:
+	-- - targetPosition: Has input "targetPosition" → Can be linked OR use argument
+	-- - speed: NO input → Always uses argument (not linkable)
+	-- - moveableName: NO input → Always uses argument (not linkable)
+	--
+	-- This allows position to come from another node (e.g., waypoint calculator)
+	-- while speed and target object are always manually configured
+	
+	local moveable = TEN.Objects.GetMoveableByName(moveableName)
+	moveable:MoveTowards(targetPosition, speed)
+end
+
+-- !Name "Apply dynamic damage"
+-- !Section "Moveable parameters"
+-- !Description "Applies damage. Amount is linkable from calculations, target is manual."
+-- !Inputs "damageAmount, Numerical, Damage amount (can be linked)"
+-- !EventModes "OnLoop"
+-- !Arguments "NewLine, Numerical, [ 0 | 1000 | 0 ], 50, Damage amount"
+-- !Arguments "Moveables, 50, Target to damage"
+
+LevelFuncs.Engine.Node.ApplyDynamicDamage = function(damageAmount, targetName)
+	-- PARAMETER MAPPING:
+	-- - damageAmount: Has input "damageAmount" → Can be linked to damage calculator
+	-- - targetName: NO input → Always manual selection
+	--
+	-- Use case: Damage calculated by another node based on game state,
+	-- but user manually picks which enemy to damage
+	
+	local moveable = TEN.Objects.GetMoveableByName(targetName)
+	moveable:DealDamage(damageAmount)
+end
+
+-- ============================================================================
+-- KEY RULE for Parameter Mapping:
+-- ============================================================================
+-- The input NAME must MATCH the function parameter NAME!
+--
+-- Example:
+--   !Inputs "targetPosition, Vector3, Description"
+--   function(targetPosition, ...)  ← Names match! ✓
+--
+-- The system maps inputs to parameters by name matching, not by position.
+-- Parameters without inputs always use their argument values (not linkable).
+--
+-- See PARAMETER_MAPPING.md for complete guide on selective parameter linking!
+-- ============================================================================

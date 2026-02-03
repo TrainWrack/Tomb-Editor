@@ -332,5 +332,6 @@ end
 See also:
 - `HOW_TO_USE_INPUTS_OUTPUTS.md` - Basic tutorial
 - `MULTIPLE_INPUTS_OUTPUTS_EXAMPLE.md` - Advanced multi-IO examples
+- `PARAMETER_MAPPING.md` - How to map inputs to specific parameters
 - `Sample Input-Output Nodes.lua` - Working code examples
 - `Readme.md` - Complete metadata reference
