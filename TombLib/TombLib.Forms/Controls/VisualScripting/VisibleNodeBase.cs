@@ -93,7 +93,7 @@ namespace TombLib.Controls.VisualScripting
             // (Node is null during initial control construction)
             if (Node != null)
             {
-                // Add grips for inputs (at top, starting from index 100)
+                // Add grips for inputs (at top, ABOVE Previous to avoid overlap)
                 // These will be accessible via ConnectionMode.InputBase + inputIndex
                 for (int i = 0; i < Node.Inputs.Count; i++)
                 {
@@ -102,7 +102,9 @@ namespace TombLib.Controls.VisualScripting
                     int xCenter = spacing * (i + 1);
                     int gripHalfWidth = 30;
                     
-                    _grips.Add(new Rectangle(xCenter - gripHalfWidth, -_gripHeight, gripHalfWidth * 2, _gripHeight * 2));
+                    // Position input grips higher up to avoid overlapping with Previous grip
+                    // Previous is at y=0, so we put inputs at y=-(_gripHeight*3) with height=_gripHeight*2
+                    _grips.Add(new Rectangle(xCenter - gripHalfWidth, -(_gripHeight * 3), gripHalfWidth * 2, _gripHeight * 2));
                 }
                 
                 // Add grips for outputs (at bottom, starting from index 200)
@@ -114,7 +116,8 @@ namespace TombLib.Controls.VisualScripting
                     int xCenter = spacing * (i + 1);
                     int gripHalfWidth = 30;
                     
-                    _grips.Add(new Rectangle(xCenter - gripHalfWidth, Height - _gripHeight, gripHalfWidth * 2, _gripHeight * 2));
+                    // Position output grips below the node with some spacing
+                    _grips.Add(new Rectangle(xCenter - gripHalfWidth, Height + _gripHeight, gripHalfWidth * 2, _gripHeight * 2));
                 }
             }
             

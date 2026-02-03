@@ -1047,7 +1047,7 @@ namespace TombLib.Controls.VisualScripting
 
             using (var brush = new SolidBrush(Colors.LightText.ToFloat3Color().ToWinFormsColor(0.3f)))
             {
-                // Draw INPUT labels at TOP of node
+                // Draw INPUT labels at TOP of node (higher up to match grip position)
                 if (node.Node.Inputs.Count > 0)
                 {
                     int inputCount = node.Node.Inputs.Count;
@@ -1059,9 +1059,9 @@ namespace TombLib.Controls.VisualScripting
                         var input = node.Node.Inputs[i];
                         var size = TextRenderer.MeasureText(input.Name, Font);
                         
-                        // Position above the node
+                        // Position higher up to match the new grip position
                         int xPos = node.Location.X + spacing * (i + 1) - size.Width / 2;
-                        int yPos = node.Location.Y - (int)(size.Height * 1.6f);
+                        int yPos = node.Location.Y - (int)(size.Height * 2.5f);
                         
                         var rect = new Rectangle(xPos, yPos, size.Width, size.Height);
 
@@ -1082,7 +1082,7 @@ namespace TombLib.Controls.VisualScripting
                     }
                 }
 
-                // Draw OUTPUT labels at BOTTOM of node
+                // Draw OUTPUT labels at BOTTOM of node (lower down to match grip position)
                 if (node.Node.Outputs.Count > 0)
                 {
                     int outputCount = node.Node.Outputs.Count;
@@ -1094,9 +1094,9 @@ namespace TombLib.Controls.VisualScripting
                         var output = node.Node.Outputs[i];
                         var size = TextRenderer.MeasureText(output.Name, Font);
                         
-                        // Position below the node
+                        // Position lower down to match the new grip position
                         int xPos = node.Location.X + spacing * (i + 1) - size.Width / 2;
-                        int yPos = node.Location.Y + node.Height + (int)(size.Height * 0.4f);
+                        int yPos = node.Location.Y + node.Height + (int)(size.Height * 1.2f);
                         
                         var rect = new Rectangle(xPos, yPos, size.Width, size.Height);
 
