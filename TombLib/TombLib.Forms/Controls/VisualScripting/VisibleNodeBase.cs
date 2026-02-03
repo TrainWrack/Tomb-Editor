@@ -85,7 +85,34 @@ namespace TombLib.Controls.VisualScripting
         protected virtual void SpawnGrips()
         {
             _grips.Clear();
+            
+            // Grip 0: Previous connection (top center)
             _grips.Add(new Rectangle(Width / 2 - _gripWidth / 2, 0, _gripWidth, _gripHeight));
+            
+            // Add grips for inputs (at top, starting from index 100)
+            // These will be accessible via ConnectionMode.InputBase + inputIndex
+            for (int i = 0; i < Node.Inputs.Count; i++)
+            {
+                int slotCount = Node.Inputs.Count;
+                int spacing = Width / (slotCount + 1);
+                int xCenter = spacing * (i + 1);
+                int gripHalfWidth = 30;
+                
+                _grips.Add(new Rectangle(xCenter - gripHalfWidth, -_gripHeight, gripHalfWidth * 2, _gripHeight * 2));
+            }
+            
+            // Add grips for outputs (at bottom, starting from index 200)
+            // These will be accessible via ConnectionMode.OutputBase + outputIndex
+            for (int i = 0; i < Node.Outputs.Count; i++)
+            {
+                int slotCount = Node.Outputs.Count;
+                int spacing = Width / (slotCount + 1);
+                int xCenter = spacing * (i + 1);
+                int gripHalfWidth = 30;
+                
+                _grips.Add(new Rectangle(xCenter - gripHalfWidth, Height - _gripHeight, gripHalfWidth * 2, _gripHeight * 2));
+            }
+            
             Invalidate();
         }
 
@@ -423,10 +450,26 @@ namespace TombLib.Controls.VisualScripting
             if (Node == null)
                 return result;
 
-            if (_grips.Count < (int)mode + 1)
+            // Handle dynamic input/output modes
+            int gripIndex = (int)mode;
+            
+            // For inputs: mode = InputBase + inputIndex, grip index = 1 + inputIndex
+            if (gripIndex >= (int)ConnectionMode.InputBase && gripIndex < (int)ConnectionMode.OutputBase)
+            {
+                int inputIndex = gripIndex - (int)ConnectionMode.InputBase;
+                gripIndex = 1 + inputIndex; // Skip Previous grip (index 0)
+            }
+            // For outputs: mode = OutputBase + outputIndex, grip index = 1 + inputCount + outputIndex
+            else if (gripIndex >= (int)ConnectionMode.OutputBase)
+            {
+                int outputIndex = gripIndex - (int)ConnectionMode.OutputBase;
+                gripIndex = 1 + Node.Inputs.Count + outputIndex;
+            }
+
+            if (_grips.Count < gripIndex + 1)
                 return result;
 
-            var grip = _grips[(int)mode];
+            var grip = _grips[gripIndex];
 
             var location = Editor.ToVisualCoord(Node.ScreenPosition);
             var x = location.X + grip.Left;
@@ -444,6 +487,33 @@ namespace TombLib.Controls.VisualScripting
             if (node == null || node == Node)
                 return false;
 
+            // Handle input/output connections
+            int modeInt = (int)mode;
+            int hotModeInt = (int)Editor.HotNodeMode;
+            
+            // If connecting TO an input
+            if (modeInt >= (int)ConnectionMode.InputBase && modeInt < (int)ConnectionMode.OutputBase)
+            {
+                // Valid only if dragging FROM an output
+                if (hotModeInt >= (int)ConnectionMode.OutputBase)
+                {
+                    // Output → Input is valid
+                    int inputIndex = modeInt - (int)ConnectionMode.InputBase;
+                    if (inputIndex >= 0 && inputIndex < Node.Inputs.Count)
+                    {
+                        // Check if input is already linked
+                        return !Node.Inputs[inputIndex].IsLinked;
+                    }
+                }
+                return false;
+            }
+            // If connecting TO an output (not allowed - outputs don't receive connections)
+            else if (modeInt >= (int)ConnectionMode.OutputBase)
+            {
+                return false;
+            }
+
+            // Original validation for Previous/Next/Else
             if (mode == Editor.HotNodeMode)
                 return false;
 
@@ -531,7 +601,7 @@ namespace TombLib.Controls.VisualScripting
             if (grip == -1)
                 return;
 
-            var mode = (ConnectionMode)grip;
+            var mode = GripToConnectionMode(grip);
 
             if (ValidConnection(mode, obj) && Editor.AnimateSnap(mode, this))
                 _lastSnappedGrip = grip;
@@ -550,7 +620,7 @@ namespace TombLib.Controls.VisualScripting
                 return;
             }
 
-            var mode = (ConnectionMode)_lastSnappedGrip;
+            var mode = GripToConnectionMode(_lastSnappedGrip);
             var obj = e.Data.GetData(e.Data.GetFormats()[0]) as TriggerNode;
 
             if (!ValidConnection(mode, obj))
@@ -559,45 +629,72 @@ namespace TombLib.Controls.VisualScripting
                 return;
             }
 
-            switch (mode)
+            int modeInt = (int)mode;
+            
+            // Handle input/output connections
+            if (modeInt >= (int)ConnectionMode.InputBase && modeInt < (int)ConnectionMode.OutputBase)
             {
-                case ConnectionMode.Previous:
+                // Connecting TO an input
+                int inputIndex = modeInt - (int)ConnectionMode.InputBase;
+                int outputIndex = Editor.HotNodeSlotIndex;
+                
+                if (outputIndex >= 0 && outputIndex < obj.Outputs.Count)
+                {
+                    // Create the link from output to input
+                    Editor.LinkInputToOutput(
+                        obj,  // Source node with output
+                        obj.Outputs[outputIndex].Name,
+                        Node,  // Target node with input
+                        Node.Inputs[inputIndex].Name
+                    );
+                    
+                    // Update argument control states
+                    UpdateArgumentControlStates();
+                }
+            }
+            else
+            {
+                // Handle Previous/Next/Else connections (existing code)
+                switch (mode)
+                {
+                    case ConnectionMode.Previous:
 
-                    if (obj is TriggerNodeCondition && Editor.HotNodeMode == ConnectionMode.Else)
-                        (obj as TriggerNodeCondition).Else = Node;
-                    else
-                        obj.Next = Node;
+                        if (obj is TriggerNodeCondition && Editor.HotNodeMode == ConnectionMode.Else)
+                            (obj as TriggerNodeCondition).Else = Node;
+                        else
+                            obj.Next = Node;
 
-                    Node.Previous = obj;
+                        Node.Previous = obj;
 
-                    if (Editor.Nodes.Contains(Node))
-                        Editor.Nodes.Remove(Node);
+                        if (Editor.Nodes.Contains(Node))
+                            Editor.Nodes.Remove(Node);
 
-                    break;
+                        break;
 
-                case ConnectionMode.Next:
-
-                    obj.Previous = Node;
-                    Node.Next = obj;
-
-                    if (Editor.Nodes.Contains(obj))
-                        Editor.Nodes.Remove(obj);
-
-                    break;
-
-                case ConnectionMode.Else:
-
-                    if (this is VisibleNodeCondition)
-                    {
-                        var condNode = Node as TriggerNodeCondition;
+                    case ConnectionMode.Next:
 
                         obj.Previous = Node;
-                        condNode.Else = obj;
+                        Node.Next = obj;
 
                         if (Editor.Nodes.Contains(obj))
                             Editor.Nodes.Remove(obj);
-                    }
-                    break;
+
+                        break;
+
+                    case ConnectionMode.Else:
+
+                        if (this is VisibleNodeCondition)
+                        {
+                            var condNode = Node as TriggerNodeCondition;
+
+                            obj.Previous = Node;
+                            condNode.Else = obj;
+
+                            if (Editor.Nodes.Contains(obj))
+                                Editor.Nodes.Remove(obj);
+                        }
+                        break;
+                }
             }
 
             Editor.HotNode = null;
@@ -634,6 +731,58 @@ namespace TombLib.Controls.VisualScripting
             }
         }
 
+        /// <summary>
+        /// Converts a grip index to the appropriate ConnectionMode.
+        /// Handles dynamic input/output slots.
+        /// </summary>
+        private ConnectionMode GripToConnectionMode(int gripIndex)
+        {
+            // Grip 0 is always Previous
+            if (gripIndex == 0)
+                return ConnectionMode.Previous;
+            
+            // Grips 1 to inputCount are inputs
+            if (gripIndex >= 1 && gripIndex <= Node.Inputs.Count)
+            {
+                int inputIndex = gripIndex - 1;
+                return (ConnectionMode)((int)ConnectionMode.InputBase + inputIndex);
+            }
+            
+            // Grips after inputs are outputs
+            if (gripIndex > Node.Inputs.Count && gripIndex <= Node.Inputs.Count + Node.Outputs.Count)
+            {
+                int outputIndex = gripIndex - 1 - Node.Inputs.Count;
+                return (ConnectionMode)((int)ConnectionMode.OutputBase + outputIndex);
+            }
+            
+            // For conditional nodes, Next and Else are added by VisibleNodeCondition
+            // Grip indices continue after outputs
+            int nextElseOffset = 1 + Node.Inputs.Count + Node.Outputs.Count;
+            if (gripIndex == nextElseOffset)
+                return ConnectionMode.Next;
+            if (gripIndex == nextElseOffset + 1)
+                return ConnectionMode.Else;
+            
+            return ConnectionMode.Previous; // Default fallback
+        }
+        
+        /// <summary>
+        /// Extracts the slot index from a ConnectionMode (for inputs/outputs).
+        /// Returns -1 if not an input/output mode.
+        /// </summary>
+        private int GetSlotIndexFromMode(ConnectionMode mode)
+        {
+            int modeInt = (int)mode;
+            
+            if (modeInt >= (int)ConnectionMode.InputBase && modeInt < (int)ConnectionMode.OutputBase)
+                return modeInt - (int)ConnectionMode.InputBase;
+            
+            if (modeInt >= (int)ConnectionMode.OutputBase)
+                return modeInt - (int)ConnectionMode.OutputBase;
+            
+            return -1;
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             if (Node.Locked)
@@ -655,7 +804,9 @@ namespace TombLib.Controls.VisualScripting
             var grip = GetGrip(e.Location);
             if (grip != -1)
             {
-                Editor.HotNodeMode = (ConnectionMode)grip;
+                var connectionMode = GripToConnectionMode(grip);
+                Editor.HotNodeMode = connectionMode;
+                Editor.HotNodeSlotIndex = GetSlotIndexFromMode(connectionMode);
                 Editor.FindForm().ActiveControl = null;
                 DoDragDrop(Node, DragDropEffects.Copy);
             }
