@@ -314,6 +314,8 @@ namespace TombLib.LevelData.IO
                     settings.AgressiveTexturePacking = chunkIO.ReadChunkBool(chunkSize);
                 else if (id == Prj2Chunks.TextureCompression)
                     settings.CompressTextures = chunkIO.ReadChunkBool(chunkSize);
+                else if (id == Prj2Chunks.TrxTextureBitDepth)
+                    settings.TrxTextureBitDepth = (TrxTextureBitDepth)chunkIO.ReadChunkInt(chunkSize);
                 else if (id == Prj2Chunks.RearrangeRooms)
                     settings.RearrangeVerticalRooms = chunkIO.ReadChunkBool(chunkSize);
                 else if (id == Prj2Chunks.RemoveUnusedObjects)
@@ -716,6 +718,19 @@ namespace TombLib.LevelData.IO
                     }
                     settings.Palette = colorList;
                 }
+                else if (id == Prj2Chunks.Favorites)
+                {
+                    settings.Favorites.Clear();
+                    chunkIO.ReadChunks((id2, chunkSize2) =>
+                    {
+                        if (id2 == Prj2Chunks.Favorite)
+                        {
+                            settings.Favorites.Add(chunkIO.ReadChunkString(chunkSize2));
+                            return true;
+                        }
+                        else return false;
+                    });
+                }
                 else
                     return false;
                 return true;
@@ -989,6 +1004,8 @@ namespace TombLib.LevelData.IO
                     }
                     else if (id2 == Prj2Chunks.RoomFlagCold)
                         room.Properties.FlagCold = chunkIO.ReadChunkBool(chunkSize2);
+                    else if (id2 == Prj2Chunks.RoomFlagNoCaustics)
+                        room.Properties.FlagNoCaustics = chunkIO.ReadChunkBool(chunkSize2);
                     else if (id2 == Prj2Chunks.RoomFlagDamage)
                         room.Properties.FlagDamage = chunkIO.ReadChunkBool(chunkSize2);
                     else if (id2 == Prj2Chunks.RoomFlagHorizon)
@@ -1182,7 +1199,7 @@ namespace TombLib.LevelData.IO
                 CancellationToken = cancelToken,
             };
             progressReporter?.ReportInfo("Building world geometry");
-            Parallel.ForEach(level.ExistingRooms, parallelOptions, room => room.BuildGeometry());
+            Parallel.ForEach(level.ExistingRooms, parallelOptions, room => room.Rebuild(relight: true, highQualityLighting: true));
             return true;
         }
 
@@ -1424,6 +1441,27 @@ namespace TombLib.LevelData.IO
                         }
                         return false;
                     });
+
+                    addObject(instance);
+                    newObjects.TryAdd(objectID, instance);
+                }
+                else if (id3 == Prj2Chunks.ObjectFlyBy3)
+                {
+                    var instance = new FlybyCameraInstance();
+                    instance.Position = chunkIO.Raw.ReadVector3();
+                    instance.SetArbitaryRotationsYX(chunkIO.Raw.ReadSingle(), chunkIO.Raw.ReadSingle());
+                    instance.Roll = chunkIO.Raw.ReadSingle();
+                    instance.ScriptId = ReadOptionalLEB128Int(chunkIO.Raw);
+                    instance.Speed = chunkIO.Raw.ReadSingle();
+                    instance.Fov = chunkIO.Raw.ReadSingle();
+                    instance.Flags = LEB128.ReadUShort(chunkIO.Raw);
+                    instance.Number = LEB128.ReadUShort(chunkIO.Raw);
+                    instance.Sequence = LEB128.ReadUShort(chunkIO.Raw);
+                    instance.Timer = LEB128.ReadShort(chunkIO.Raw);
+                    instance.DofDistance = chunkIO.Raw.ReadSingle();
+                    instance.DofRange = chunkIO.Raw.ReadSingle();
+                    instance.DofStrength = chunkIO.Raw.ReadSingle();
+                    instance.DofMode = (DofMode)chunkIO.Raw.ReadInt32();
 
                     addObject(instance);
                     newObjects.TryAdd(objectID, instance);
